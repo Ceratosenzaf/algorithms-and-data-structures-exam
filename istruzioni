@@ -1,0 +1,167 @@
+// Davide Cerato (matricola 984481)
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+// DEFINIZIONI GENERALI
+// mattoncini: unici, uno per ogni nome
+// stampa: "σ: α, β"
+type mattoncino struct {
+	nome     string // σ
+	sinistra string // α
+	destra   string // β
+}
+
+// DEFINIZIONI GENERALI
+// mattoncino orientato sinistra-destra (true) o verso destra-sinistra (false)
+// stampa (γ): "σ: α, β" se ordine = "+" / "σ: β, α" se ordine = "-"
+type mattoncinoOrdinato struct {
+	valore mattoncino
+	ordine string // "+" o "-"
+}
+
+// DEFINIZIONI GENERALI
+// fila da A a B: fila di mattoncini che si incastrano l'un l'altro, il cui primo è orientato con A a sinistra e l'ultimo orientato con B a destra
+// lunghezza fila: numero di mattoncini incastrati
+// fila minima: fila da A a B avente lunghezza minima fra tutte le possibili file da A a B
+// stampa: "(" \n γ1 \n γ2 \n ... \n γn \n ")"
+
+// CACOFONIA
+// nome fila: concatenazione da sinistra a destra dei nomi dei singoli mattoncini
+// sottostringa comune a X e Y: tutte le lettere di questa sottostringa compaiono in X e Y nello stesso ordine in cui compaiono nella sottostringa (anche non consecutivamente)
+// sottostringa massima comune a X e Y: sottostringa comune a X e Y con lunghezza massima tra tutte le sotto-stringhe comuni a X e Y
+// indice di cacofonia: somma delle lunghezze delle sotto-stringhe massime associate a coppie di mattoncini vicini nella fila
+
+// TRASFORMAZIONE
+// da fila a sequenza ordinata di mattoncini (non necessariamente una fila nei passaggi intermedi di inserimento/cancellazione)
+// inserimento: un mattoncino della scatola viene inserito in un qualsiasi punto della fila
+// cancellazione: un mattoncino viene tolto dalla fila e messo nella scatola
+// cambiamento di disposizione: invertire ordine mattoncino (non ha costo)
+// costo: numero minimo di operazioni di inserimento/cancellazione necessarie per trasformare una fila F in un'altra fila che definisce la sequenza ordinata di mattoncini (indefinito se impossibile)
+type fila struct {
+	valore []mattoncinoOrdinato
+}
+
+// DEFINIZIONI GENERALI
+// insieme non ordinato di mattoncini
+type scatola struct {
+	valore map[mattoncino]bool
+}
+
+// DEFINIZIONI GENERALI
+type gioco struct{}
+
+// METODI
+
+// Se esiste già un mattoncino di nome σ oppure se α è uguale a β, non compie alcuna operazione.
+// Altrimenti, inserisce nella scatola il mattoncino definito dalla tripla (α, β, σ).
+func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
+
+}
+
+// Se non esiste alcun mattoncino di nome σ non compie alcuna operazione.
+// Altrimenti, stampa il mattoncino con nome σ, secondo il formato specificato nell’apposita sezione.
+func stampaMattoncino(g gioco, sigma string) {
+
+}
+
+// Verifica se nella scatola ci sono i mattoncini di nome σ1, σ2, ..., σn e se la sequenza di mattoncini ±σ1, ±σ2, ..., ±σn costituisce una fila:
+// In questo caso, toglie dalla scatola i mattoncini che la compongono e li dispone sul tavolo formando la fila.
+// In caso contrario, non compie alcuna operazione.
+// dove listaNomi è un stringa della forma "±σ1, ±σ2, ..., ±σn"
+// dove ± indica uno dei due simboli + o −.
+func disponiFila(g gioco, listaNomi string) {
+
+}
+
+// Se non esiste alcun mattoncino di nome σ, oppure se il mattoncino di nome σ non appartiene ad alcuna fila sul tavolo da gioco, non compie alcuna operazione.
+// Altrimenti, stampa la fila cui appartiene il mattoncino con nome σ, secondo il formato specificato nell’apposita sezione.
+func stampaFila(g gioco, sigma string) {
+
+}
+
+// Se non esiste alcun mattoncino di nome σ, oppure se il mattoncino di nome σ non appartiene ad alcuna fila sul tavolo da gioco, non compie alcuna operazione.
+// Altrimenti, sia F la fila cui appartiene il mattoncino di nome σ. La fila F è rimossa dal tavolo e tutti i mattoncini che la compongono sono rimessi nella scatola.
+func eliminaFila(g gioco, sigma string) {
+
+}
+
+// Crea e posiziona sul tavolo da gioco una fila di lunghezza minima da α a β. Tutti i mattoncini della fila devono essere presi dalla scatola.
+// Se non è possibile creare alcuna fila da α a β, stampa il messaggio: "non esiste fila da α a β"
+func disponiFilaMinima(g gioco, alpha, beta string) {
+
+}
+
+// Stampa su una nuova riga una sottostringa massima ρ di σ e τ (se ρ è la stringa nulla, stampa una riga vuota).
+func sottostringaMassima(g gioco, sigma, tao fila) {
+
+}
+
+// Se non esiste alcun mattoncino di nome σ oppure se il mattoncino di nome σ non appartiene ad alcuna fila, non compie alcuna operazione.
+// Altrimenti stampa l’indice di cacofonia della fila cui appartiene il mattoncino di nome σ.
+func indiceCacofonia(g gioco, sigma string) {
+
+}
+
+// Se σ non fa parte di alcuna fila, non compie alcuna operazione.
+// Altrimenti, detta F la fila cui appartiene il mattoncino di nome σ, stampa il costo del passaggio da F alla sequenza di forme s = α1, α2, ..., αn (stampa "indefinito" se il costo di passaggio è indefinito).
+func costo(g gioco, sigma fila, listaNomi string) {
+
+}
+
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for scanner.Scan() {
+		input := scanner.Text()
+
+		switch input[0] {
+		case 'm':
+			fmt.Println("inserisciMattoncino()")
+			break
+
+		case 's':
+			fmt.Println("stampaMattoncino()")
+			break
+
+		case 'd':
+			fmt.Println("disponiFila()")
+			break
+
+		case 'S':
+			fmt.Println("stampaFila()")
+			break
+
+		case 'e':
+			fmt.Println("eliminaFila()")
+			break
+
+		case 'f':
+			fmt.Println("disponiFilaMinima()")
+			break
+
+		case 'M':
+			fmt.Println("sottostringaMassima()")
+			break
+
+		case 'i':
+			fmt.Println("indiceCacofonia()")
+			break
+
+		case 'c':
+			fmt.Println("costo()")
+			break
+
+		case 'q':
+			return
+
+		default:
+			fmt.Println("invalid code")
+			break
+		}
+	}
+}
