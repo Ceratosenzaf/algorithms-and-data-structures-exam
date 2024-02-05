@@ -153,10 +153,11 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 	}
 	var coda []MattoncinoDaVisitare
 	var visitati map[NomeMattoncino]bool
+	var precedenti map[NomeMattoncino]NomeMattoncino
 	distanze := make(map[NomeMattoncino]int)
 
 	// 3. definisco la funzione di calcolo
-	calcolaFilaMinima := func(mattoncino NomeMattoncino) (nMattoncini int) {
+	calcolaFilaMinima := func(mattoncino NomeMattoncino) (nMattoncini int, ultimoMattoncino NomeMattoncino) {
 		for len(coda) > 0 {
 			// 3.1 prendo il primo mattoncino dalla coda (coda.pop())
 			datiMattoncino := coda[0]
@@ -168,11 +169,9 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 				bordoDaControllare = g.mattoncini[mattoncino].sinistra
 			}
 
-			fmt.Printf("Controllando %s da %s a %s\n", mattoncino, datiMattoncino.da, bordoDaControllare)
-
 			// 3.2 controllo
 			if bordoDaControllare == Bordo(beta) {
-				return distanze[mattoncino]
+				return distanze[mattoncino], datiMattoncino.mattoncino
 			}
 
 			// 3.3 aggiorno distanze e aggiungo alla coda (coda.enqueue())
@@ -183,18 +182,22 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 
 				distanze[next] = distanze[mattoncino] + 1
 				visitati[next] = true
+				precedenti[next] = mattoncino
 				coda = append(coda, MattoncinoDaVisitare{next, bordoDaControllare})
 			}
 		}
 
-		return infinito
+		return infinito, ""
 	}
 
 	// 4. calcolo la distanza minima
 	distanzaMinima := infinito
+	precedentiFilaMinima := precedenti
+	var ultimoMattoncinoFilaMinima NomeMattoncino
 
 	for _, mattoncino := range archi[Bordo(alpha)] {
 		// 4.1 resetto le strutture dati
+		precedenti = make(map[NomeMattoncino]NomeMattoncino)
 		visitati = make(map[NomeMattoncino]bool)
 		visitati[mattoncino] = true
 		for m := range g.scatola {
@@ -204,11 +207,13 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 		coda = []MattoncinoDaVisitare{{mattoncino, Bordo(alpha)}}
 
 		// 4.2 cerco la fila
-		distanza := calcolaFilaMinima(mattoncino)
+		distanza, ultimoMattoncino := calcolaFilaMinima(mattoncino)
 
 		// 4.3 controllo la fila trovata
 		if distanza < distanzaMinima {
 			distanzaMinima = distanza
+			precedentiFilaMinima = precedenti
+			ultimoMattoncinoFilaMinima = ultimoMattoncino
 		}
 	}
 
@@ -216,7 +221,34 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 	if distanzaMinima == infinito {
 		fmt.Printf("non esiste fila da %s a %s\n", alpha, beta)
 	} else {
-		fmt.Println("distanza minima", distanzaMinima+1)
+		listaNomi := ""
+		mattoncino := ultimoMattoncinoFilaMinima
+		bordo := Bordo(beta)
+
+		for {
+			direzione := Plus
+			if bordo == g.mattoncini[mattoncino].sinistra {
+				direzione = Minus
+			}
+
+			listaNomi = string(direzione) + mattoncino + listaNomi
+
+			if direzione == Plus {
+				bordo = g.mattoncini[mattoncino].sinistra
+			} else {
+				bordo = g.mattoncini[mattoncino].destra
+			}
+
+			var found bool
+			mattoncino, found = precedentiFilaMinima[mattoncino]
+
+			if !found {
+				break
+			}
+			listaNomi = " " + listaNomi
+		}
+
+		disponiFila(g, listaNomi)
 	}
 
 }
