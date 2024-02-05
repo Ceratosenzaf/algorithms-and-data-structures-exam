@@ -309,8 +309,79 @@ func indiceCacofonia(g gioco, sigma string) {
 	fmt.Println(somma)
 }
 
-func costo(g gioco, sigma Fila, listaNomi string) {
+func costo(g gioco, sigma string, listaNomi string) {
+	filaDaCalcolare := g.mattoncini[sigma].fila
+	if filaDaCalcolare == "" {
+		return
+	}
 
+	var mattonciniFila []NomeMattoncino
+	var mattonciniListaNomi []NomeMattoncino
+	setMattonciniFila := make(map[NomeMattoncino]bool)
+	setMattonciniListaNomi := make(map[NomeMattoncino]bool)
+
+	for _, mattoncino := range g.file[filaDaCalcolare] {
+		mattonciniFila = append(mattonciniFila, mattoncino.nome)
+		setMattonciniFila[mattoncino.nome] = true
+	}
+
+	for _, mattoncinoOrdinato := range strings.Split(listaNomi, " ") {
+		nomeMattoncino := mattoncinoOrdinato[1:]
+
+		if duplicato := setMattonciniListaNomi[nomeMattoncino]; duplicato {
+			fmt.Println("indefinito")
+			return
+		}
+		if nellaScatola := g.scatola[nomeMattoncino]; !nellaScatola {
+			if nellaFila := setMattonciniFila[nomeMattoncino]; !nellaFila {
+				fmt.Println("indefinito")
+				return
+			}
+		}
+
+		mattonciniListaNomi = append(mattonciniListaNomi, nomeMattoncino)
+		setMattonciniListaNomi[nomeMattoncino] = true
+	}
+
+	sottoArrayMassimo := func(a, b []string) int {
+		m := len(a)
+		n := len(b)
+
+		if m == 0 || n == 0 {
+			return 0
+		}
+
+		if m < n {
+			a, b = b, a
+			m, n = n, m
+		}
+
+		current := make([]int, n+1)
+		previous := make([]int, n+1)
+
+		for i := 1; i <= m; i++ {
+			current, previous = previous, current
+
+			for j := 1; j <= n; j++ {
+				if a[i-1] == b[j-1] {
+					current[j] = previous[j-1] + 1
+				} else {
+					if current[j-1] > previous[j] {
+						current[j] = current[j-1]
+					} else {
+						current[j] = previous[j]
+					}
+				}
+			}
+		}
+
+		return current[n]
+	}
+
+	max := sottoArrayMassimo(mattonciniFila, mattonciniListaNomi)
+	costo := (len(mattonciniFila) - max) + (len(mattonciniListaNomi) - max)
+
+	fmt.Println(costo)
 }
 
 func main() {
@@ -362,7 +433,8 @@ func main() {
 			break
 
 		case 'c':
-			fmt.Println("costo()")
+			parti := strings.SplitN(input, " ", 3)
+			costo(g, parti[1], parti[2])
 			break
 
 		case 'q':
