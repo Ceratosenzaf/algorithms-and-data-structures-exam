@@ -97,7 +97,7 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 }
 
 // Stampa su una nuova riga una sottostringa massima ρ di σ e τ (se ρ è la stringa nulla, stampa una riga vuota).
-func sottostringaMassima(g gioco, sigma, tao fila) {
+func sottostringaMassima(g gioco, sigma, tao string) {
 
 }
 
