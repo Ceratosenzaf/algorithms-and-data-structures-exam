@@ -250,11 +250,41 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 
 		disponiFila(g, listaNomi)
 	}
-
 }
 
-func sottostringaMassima(g gioco, sigma, tao Fila) string {
-	return ""
+func sottostringaMassima(g gioco, sigma, tao string) string {
+	m := len(sigma)
+	n := len(tao)
+
+	if m == 0 || n == 0 {
+		return ""
+	}
+
+	if m < n {
+		sigma, tao = tao, sigma
+		m, n = n, m
+	}
+
+	current := make([]string, n+1)
+	previous := make([]string, n+1)
+
+	for i := 1; i <= m; i++ {
+		current, previous = previous, current
+
+		for j := 1; j <= n; j++ {
+			if sigma[i-1] == tao[j-1] {
+				current[j] = previous[j-1] + string(sigma[i-1])
+			} else {
+				if len(current[j-1]) > len(previous[j]) {
+					current[j] = current[j-1]
+				} else {
+					current[j] = previous[j]
+				}
+			}
+		}
+	}
+
+	return current[n]
 }
 
 func indiceCacofonia(g gioco, sigma string) {
@@ -304,7 +334,8 @@ func main() {
 			break
 
 		case 'M':
-			fmt.Println("sottostringaMassima()")
+			parti := strings.Split(input, " ")
+			fmt.Println(sottostringaMassima(g, parti[1], parti[2]))
 			break
 
 		case 'i':
