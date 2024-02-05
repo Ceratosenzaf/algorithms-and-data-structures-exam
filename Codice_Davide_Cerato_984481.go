@@ -39,15 +39,36 @@ type gioco struct {
 	file       map[NomeFila]Fila             // k file
 }
 
+func bordoDaDirezione(m Mattoncino, dir Direzione, posizioneBordo string) Bordo {
+	if dir == Plus {
+		if posizioneBordo == "destra" {
+			return m.destra
+		}
+		return m.sinistra
+	}
+	if posizioneBordo == "destra" {
+		return m.sinistra
+	}
+	return m.destra
+}
+
+func stampaMattoncinoInDirezione(g gioco, sigma string, dir Direzione) {
+	if mattoncino, ok := g.mattoncini[sigma]; ok {
+		if dir == Plus {
+			fmt.Printf("%s: %s, %s\n", sigma, mattoncino.sinistra, mattoncino.destra)
+		} else {
+			fmt.Printf("%s: %s, %s\n", sigma, mattoncino.destra, mattoncino.sinistra)
+		}
+	}
+}
+
 func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
 	g.mattoncini[sigma] = Mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
 	g.scatola[sigma] = true
 }
 
 func stampaMattoncino(g gioco, sigma string) {
-	if m, ok := g.mattoncini[sigma]; ok {
-		fmt.Printf("%s: %s, %s\n", sigma, m.sinistra, m.destra)
-	}
+	stampaMattoncinoInDirezione(g, sigma, Plus)
 }
 
 func disponiFila(g gioco, listaNomi string) {
@@ -58,19 +79,6 @@ func disponiFila(g gioco, listaNomi string) {
 		if presente := g.scatola[nome]; !presente {
 			return
 		}
-	}
-
-	bordoDaDirezione := func(b Mattoncino, dir Direzione, posizioneBordo string) Bordo {
-		if dir == Plus {
-			if posizioneBordo == "destra" {
-				return b.destra
-			}
-			return b.sinistra
-		}
-		if posizioneBordo == "destra" {
-			return b.sinistra
-		}
-		return b.destra
 	}
 
 	for i := 0; i < len(mattonciniOrdinati)-1; i++ {
@@ -105,7 +113,7 @@ func stampaFila(g gioco, sigma string) {
 
 	fmt.Println("(")
 	for _, mattoncino := range g.file[g.mattoncini[sigma].fila] {
-		stampaMattoncino(g, string(mattoncino.nome))
+		stampaMattoncinoInDirezione(g, string(mattoncino.nome), mattoncino.direzione)
 	}
 	fmt.Println(")")
 }
@@ -233,13 +241,8 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 
 			listaNomi = string(direzione) + mattoncino + listaNomi
 
-			if direzione == Plus {
-				bordo = g.mattoncini[mattoncino].sinistra
-			} else {
-				bordo = g.mattoncini[mattoncino].destra
-			}
-
 			var found bool
+			bordo = bordoDaDirezione(g.mattoncini[mattoncino], direzione, "sinistra")
 			mattoncino, found = precedentiFilaMinima[mattoncino]
 
 			if !found {
@@ -288,7 +291,22 @@ func sottostringaMassima(g gioco, sigma, tao string) string {
 }
 
 func indiceCacofonia(g gioco, sigma string) {
+	filaDaCalcolare := g.mattoncini[sigma].fila
+	if filaDaCalcolare == "" {
+		return
+	}
 
+	somma := 0
+	fila := g.file[filaDaCalcolare]
+
+	for i := 0; i < len(fila)-1; i++ {
+		mattoncino := fila[i].nome
+		proxMattoncino := fila[i+1].nome
+
+		somma += len(sottostringaMassima(g, mattoncino, proxMattoncino))
+	}
+
+	fmt.Println(somma)
 }
 
 func costo(g gioco, sigma Fila, listaNomi string) {
@@ -339,7 +357,8 @@ func main() {
 			break
 
 		case 'i':
-			fmt.Println("indiceCacofonia()")
+			parti := strings.Split(input, " ")
+			indiceCacofonia(g, parti[1])
 			break
 
 		case 'c':
@@ -354,8 +373,8 @@ func main() {
 			break
 		}
 
-		fmt.Println(g.file)
-		fmt.Println(g.scatola)
-		fmt.Println(g.mattoncini)
+		// fmt.Println(g.file)
+		// fmt.Println(g.scatola)
+		// fmt.Println(g.mattoncini)
 	}
 }
