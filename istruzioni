@@ -109,7 +109,7 @@ func indiceCacofonia(g gioco, sigma string) {
 
 // Se σ non fa parte di alcuna fila, non compie alcuna operazione.
 // Altrimenti, detta F la fila cui appartiene il mattoncino di nome σ, stampa il costo del passaggio da F alla sequenza di forme s = α1, α2, ..., αn (stampa "indefinito" se il costo di passaggio è indefinito).
-func costo(g gioco, sigma fila, listaNomi string) {
+func costo(g gioco, sigma string, listaNomi string) {
 
 }
 
