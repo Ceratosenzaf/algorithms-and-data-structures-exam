@@ -309,7 +309,7 @@ func indiceCacofonia(g gioco, sigma string) {
 	fmt.Println(somma)
 }
 
-func costo(g gioco, sigma string, listaNomi string) {
+func costo(g gioco, sigma string, nomiNonOrdinati ...string) {
 	filaDaCalcolare := g.mattoncini[sigma].fila
 	if filaDaCalcolare == "" {
 		return
@@ -325,9 +325,7 @@ func costo(g gioco, sigma string, listaNomi string) {
 		setMattonciniFila[mattoncino.nome] = true
 	}
 
-	for _, mattoncinoOrdinato := range strings.Split(listaNomi, " ") {
-		nomeMattoncino := mattoncinoOrdinato[1:]
-
+	for _, nomeMattoncino := range nomiNonOrdinati {
 		if duplicato := setMattonciniListaNomi[nomeMattoncino]; duplicato {
 			fmt.Println("indefinito")
 			return
@@ -433,8 +431,8 @@ func main() {
 			break
 
 		case 'c':
-			parti := strings.SplitN(input, " ", 3)
-			costo(g, parti[1], parti[2])
+			parti := strings.Split(input, " ")
+			costo(g, parti[1], parti[2:]...)
 			break
 
 		case 'q':
