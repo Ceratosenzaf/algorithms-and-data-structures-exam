@@ -39,6 +39,8 @@ type gioco struct {
 	file       map[NomeFila]Fila             // k file
 }
 
+const infinito = math.MaxInt64
+
 func bordoDaDirezione(m Mattoncino, dir Direzione, posizioneBordo string) Bordo {
 	if dir == Plus {
 		if posizioneBordo == "destra" {
@@ -132,8 +134,6 @@ func eliminaFila(g gioco, sigma string) {
 }
 
 func disponiFilaMinima(g gioco, alpha, beta string) {
-	const infinito = math.MaxInt64
-
 	// 1. creo lista di adiacenza
 	archi := make(map[Bordo][]NomeMattoncino)
 
@@ -309,38 +309,116 @@ func indiceCacofonia(g gioco, sigma string) {
 	fmt.Println(somma)
 }
 
-func costo(g gioco, sigma string, nomiNonOrdinati ...string) {
+func costo(g gioco, sigma string, listaBordi ...string) {
 	filaDaCalcolare := g.mattoncini[sigma].fila
 	if filaDaCalcolare == "" {
 		return
 	}
 
-	var mattonciniFila []NomeMattoncino
-	var mattonciniListaNomi []NomeMattoncino
-	setMattonciniFila := make(map[NomeMattoncino]bool)
-	setMattonciniListaNomi := make(map[NomeMattoncino]bool)
+	// 1. creo lista di adiacenza
+	archi := make(map[Bordo][]NomeMattoncino)
 
-	for _, mattoncino := range g.file[filaDaCalcolare] {
-		mattonciniFila = append(mattonciniFila, mattoncino.nome)
-		setMattonciniFila[mattoncino.nome] = true
+	for mattoncino := range g.scatola {
+		sinistra := g.mattoncini[mattoncino].sinistra
+		destra := g.mattoncini[mattoncino].destra
+
+		if arco, ok := archi[sinistra]; !ok {
+			archi[sinistra] = []NomeMattoncino{mattoncino}
+		} else {
+			archi[sinistra] = append(arco, mattoncino)
+		}
+
+		if arco, ok := archi[destra]; !ok {
+			archi[destra] = []NomeMattoncino{mattoncino}
+		} else {
+			archi[destra] = append(arco, mattoncino)
+		}
 	}
 
-	for _, nomeMattoncino := range nomiNonOrdinati {
-		if duplicato := setMattonciniListaNomi[nomeMattoncino]; duplicato {
-			fmt.Println("indefinito")
-			return
+	for _, mattoncino := range g.file[filaDaCalcolare] {
+		sinistra := g.mattoncini[mattoncino.nome].sinistra
+		destra := g.mattoncini[mattoncino.nome].destra
+
+		if arco, ok := archi[sinistra]; !ok {
+			archi[sinistra] = []NomeMattoncino{mattoncino.nome}
+		} else {
+			archi[sinistra] = append(arco, mattoncino.nome)
 		}
-		if nellaScatola := g.scatola[nomeMattoncino]; !nellaScatola {
-			if nellaFila := setMattonciniFila[nomeMattoncino]; !nellaFila {
-				fmt.Println("indefinito")
-				return
+
+		if arco, ok := archi[destra]; !ok {
+			archi[destra] = []NomeMattoncino{mattoncino.nome}
+		} else {
+			archi[destra] = append(arco, mattoncino.nome)
+		}
+	}
+
+	// 2. creo le strutture dati
+	var mattonciniFila []NomeMattoncino
+	var possibiliMattonciniListaBordi [][]NomeMattoncino
+
+	// 2.1 valorizzo lista mattoncini da fila
+	for _, mattoncino := range g.file[filaDaCalcolare] {
+		mattonciniFila = append(mattonciniFila, mattoncino.nome)
+	}
+
+	// 2.2 valorizzo liste mattoncini da lista bordi
+	for i := 0; i < len(listaBordi)-1; i++ {
+		bordo := Bordo(listaBordi[i])
+		proxBordo := Bordo(listaBordi[i+1])
+
+		// 2.2.1 trovo mattoncini candidati per il posto
+		var possibiliMattoncini []NomeMattoncino
+		for _, mattoncino := range archi[bordo] {
+			if (g.mattoncini[mattoncino].sinistra == bordo && g.mattoncini[mattoncino].destra == proxBordo) || (g.mattoncini[mattoncino].destra == bordo && g.mattoncini[mattoncino].sinistra == proxBordo) {
+				possibiliMattoncini = append(possibiliMattoncini, mattoncino)
 			}
 		}
 
-		mattonciniListaNomi = append(mattonciniListaNomi, nomeMattoncino)
-		setMattonciniListaNomi[nomeMattoncino] = true
+		// 2.2.2 controllo se ho possibili mattoncini
+		if len(possibiliMattoncini) == 0 {
+			fmt.Println("indefinito 1")
+			return
+		}
+
+		// 2.2.3 aggiorno le possibili liste
+		var newPossibili [][]NomeMattoncino
+		if len(possibiliMattonciniListaBordi) == 0 {
+			for _, mattoncino := range possibiliMattoncini {
+				newPossibili = append(newPossibili, []NomeMattoncino{mattoncino})
+			}
+		}
+		for _, mattonciniListaBordi := range possibiliMattonciniListaBordi {
+			var temp []NomeMattoncino
+
+			for _, mattoncino := range possibiliMattoncini {
+				// 2.2.4 rimuovo liste non possibili perché contenenti elementi duplicati
+				valid := true
+				for _, m := range mattonciniListaBordi {
+					if m == mattoncino {
+						valid = false
+						break
+					}
+				}
+
+				// 2.2.5 se possibile aggiungo alle possibili liste
+				if valid {
+					temp = append(mattonciniListaBordi, mattoncino)
+				}
+			}
+
+			// 2.2.6 controllo se ho trovato almeno una lista possibile
+			if len(temp) == 0 {
+				fmt.Println("indefinito 2")
+				return
+			}
+
+			newPossibili = append(newPossibili, temp)
+		}
+
+		possibiliMattonciniListaBordi = newPossibili
 	}
 
+	// 3. definisco la funzione ausiliaria al calcolo
 	sottoArrayMassimo := func(a, b []string) int {
 		m := len(a)
 		n := len(b)
@@ -376,10 +454,22 @@ func costo(g gioco, sigma string, nomiNonOrdinati ...string) {
 		return current[n]
 	}
 
-	max := sottoArrayMassimo(mattonciniFila, mattonciniListaNomi)
-	costo := (len(mattonciniFila) - max) + (len(mattonciniListaNomi) - max)
+	// 4. calcolo il costo
+	costoMinimo := infinito
+	for _, mattonciniListaBordi := range possibiliMattonciniListaBordi {
+		max := sottoArrayMassimo(mattonciniFila, mattonciniListaBordi)
+		costo := (len(mattonciniFila) - max) + (len(mattonciniListaBordi) - max)
+		if costo < costoMinimo {
+			costoMinimo = costo
+		}
+	}
 
-	fmt.Println(costo)
+	// 5. stampo il risultato
+	if costoMinimo == infinito {
+		fmt.Println("indefinito 3")
+	} else {
+		fmt.Println(costoMinimo)
+	}
 }
 
 func main() {
@@ -442,9 +532,5 @@ func main() {
 			fmt.Println("invalid code")
 			break
 		}
-
-		// fmt.Println(g.file)
-		// fmt.Println(g.scatola)
-		// fmt.Println(g.mattoncini)
 	}
 }
