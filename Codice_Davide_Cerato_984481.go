@@ -30,13 +30,12 @@ type MattoncinoOrdinato struct {
 	direzione Direzione
 }
 
-type NomeFila string           // +a -b ... -z
-type Fila []MattoncinoOrdinato // l mattoncini
+type NomeFila string // +a -b ... -z
+type Fila []MattoncinoOrdinato
 
 type gioco struct {
-	mattoncini map[NomeMattoncino]Mattoncino // n mattoncini
-	scatola    map[NomeMattoncino]bool       // m mattoncini
-	file       map[NomeFila]Fila             // k file
+	mattoncini map[NomeMattoncino]Mattoncino
+	file       map[NomeFila]Fila
 }
 
 const infinito = math.MaxInt64
@@ -64,6 +63,40 @@ func stampaMattoncinoInDirezione(g gioco, sigma string, dir Direzione) {
 	}
 }
 
+func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
+	archi := make(map[Bordo]map[Bordo][]NomeMattoncino)
+	for nomeMattoncino, mattoncino := range g.mattoncini {
+		if mattoncino.fila == "" {
+			if _, ok := archi[mattoncino.sinistra]; !ok {
+				archi[mattoncino.sinistra] = make(map[Bordo][]string)
+			}
+			archi[mattoncino.sinistra][mattoncino.destra] = append(archi[mattoncino.sinistra][mattoncino.destra], nomeMattoncino)
+		}
+	}
+
+	for i := 0; i < len(listaBordi)-1; i++ {
+		bordo := listaBordi[i]
+		proxBordo := listaBordi[i+1]
+
+		var dir Direzione
+		var mattoncino NomeMattoncino
+
+		if mattonciniDritti := archi[bordo][proxBordo]; len(mattonciniDritti) > 0 {
+			dir = Plus
+			mattoncino = mattonciniDritti[0]
+		} else if mattonciniRovesci := archi[proxBordo][bordo]; len(mattonciniRovesci) > 0 {
+			dir = Minus
+			mattoncino = mattonciniRovesci[0]
+		} else {
+			break
+		}
+
+		listaNomi += " " + string(dir) + mattoncino
+	}
+
+	return listaNomi[1:]
+}
+
 func aggiungiAListaDiAdiacenzaDaNome(g gioco, archi map[Bordo][]NomeMattoncino, sigma string) {
 	sinistra := g.mattoncini[sigma].sinistra
 	destra := g.mattoncini[sigma].destra
@@ -83,7 +116,6 @@ func aggiungiAListaDiAdiacenzaDaNome(g gioco, archi map[Bordo][]NomeMattoncino, 
 
 func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
 	g.mattoncini[sigma] = Mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
-	g.scatola[sigma] = true
 }
 
 func stampaMattoncino(g gioco, sigma string) {
@@ -96,7 +128,7 @@ func disponiFila(g gioco, listaNomi string) {
 	visti := make(map[NomeMattoncino]bool)
 	for _, mattoncinoOrdinato := range mattonciniOrdinati {
 		nome := mattoncinoOrdinato[1:]
-		if presente := g.scatola[nome]; !presente {
+		if m := g.mattoncini[nome]; m.fila != "" {
 			return
 		}
 		if duplicato := visti[nome]; duplicato {
@@ -122,7 +154,6 @@ func disponiFila(g gioco, listaNomi string) {
 		direzione := Direzione(mattoncinoOrdinato[0])
 		nome := mattoncinoOrdinato[1:]
 
-		delete(g.scatola, nome)
 		fila[i] = MattoncinoOrdinato{nome, direzione}
 		g.mattoncini[nome] = Mattoncino{sinistra: g.mattoncini[nome].sinistra, destra: g.mattoncini[nome].destra, fila: nomeFila}
 	}
@@ -149,7 +180,6 @@ func eliminaFila(g gioco, sigma string) {
 
 	filaDaEliminare := g.mattoncini[sigma].fila
 	for _, elementoFila := range g.file[filaDaEliminare] {
-		g.scatola[elementoFila.nome] = true
 		g.mattoncini[elementoFila.nome] = Mattoncino{
 			sinistra: g.mattoncini[elementoFila.nome].sinistra,
 			destra:   g.mattoncini[elementoFila.nome].destra,
@@ -159,109 +189,58 @@ func eliminaFila(g gioco, sigma string) {
 }
 
 func disponiFilaMinima(g gioco, alpha, beta string) {
-	// 1. creo lista di adiacenza
-	archi := make(map[Bordo][]NomeMattoncino)
-	for mattoncino := range g.scatola {
-		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino)
+	// 1. inizializzo le strutture dati
+	archi := make(map[Bordo][]Bordo)
+	for _, mattoncino := range g.mattoncini {
+		if mattoncino.fila == "" {
+			archi[mattoncino.sinistra] = append(archi[mattoncino.sinistra], mattoncino.destra)
+			archi[mattoncino.destra] = append(archi[mattoncino.destra], mattoncino.sinistra)
+		}
 	}
 
-	// 2. inizializzo le strutture dati
-	type MattoncinoDaVisitare struct {
-		mattoncino NomeMattoncino
-		da         Bordo
-	}
-	var coda []MattoncinoDaVisitare
-	var visitati map[NomeMattoncino]bool
-	var precedenti map[NomeMattoncino]NomeMattoncino
-	distanze := make(map[NomeMattoncino]int)
+	visitati := make(map[Bordo]bool)
+	distanze := make(map[Bordo]int)
+	precedenti := make(map[Bordo]Bordo)
+	coda := []Bordo{Bordo(alpha)}
 
-	// 3. definisco la funzione di calcolo
-	calcolaFilaMinima := func(mattoncino NomeMattoncino) (nMattoncini int, ultimoMattoncino NomeMattoncino) {
+	// 2. calcolo la distanza minima
+	trovaMinimo := func() int {
 		for len(coda) > 0 {
-			// 3.1 prendo il primo mattoncino dalla coda (coda.pop())
-			datiMattoncino := coda[0]
+			bordo := coda[0]
 			coda = coda[1:]
 
-			mattoncino := datiMattoncino.mattoncino
-			bordoDaControllare := g.mattoncini[mattoncino].destra
-			if datiMattoncino.da == bordoDaControllare {
-				bordoDaControllare = g.mattoncini[mattoncino].sinistra
-			}
+			for _, proxBordo := range archi[bordo] {
+				if !visitati[proxBordo] {
 
-			// 3.2 controllo
-			if bordoDaControllare == Bordo(beta) {
-				return distanze[mattoncino], datiMattoncino.mattoncino
-			}
+					visitati[proxBordo] = true
 
-			// 3.3 aggiorno distanze e aggiungo alla coda (coda.enqueue())
-			for _, next := range archi[bordoDaControllare] {
-				if next == mattoncino || visitati[next] {
-					continue
+					distanze[proxBordo] = distanze[bordo] + 1
+					precedenti[proxBordo] = bordo
+
+					if proxBordo == Bordo(beta) {
+						return distanze[proxBordo]
+					}
+
+					coda = append(coda, proxBordo)
 				}
-
-				distanze[next] = distanze[mattoncino] + 1
-				visitati[next] = true
-				precedenti[next] = mattoncino
-				coda = append(coda, MattoncinoDaVisitare{next, bordoDaControllare})
 			}
 		}
-
-		return infinito, ""
+		return infinito
 	}
 
-	// 4. calcolo la distanza minima
-	distanzaMinima := infinito
-	precedentiFilaMinima := precedenti
-	var ultimoMattoncinoFilaMinima NomeMattoncino
-
-	for _, mattoncino := range archi[Bordo(alpha)] {
-		// 4.1 resetto le strutture dati
-		precedenti = make(map[NomeMattoncino]NomeMattoncino)
-		visitati = make(map[NomeMattoncino]bool)
-		visitati[mattoncino] = true
-		for m := range g.scatola {
-			distanze[m] = infinito
-		}
-		distanze[mattoncino] = 0
-		coda = []MattoncinoDaVisitare{{mattoncino, Bordo(alpha)}}
-
-		// 4.2 cerco la fila
-		distanza, ultimoMattoncino := calcolaFilaMinima(mattoncino)
-
-		// 4.3 controllo la fila trovata
-		if distanza < distanzaMinima {
-			distanzaMinima = distanza
-			precedentiFilaMinima = precedenti
-			ultimoMattoncinoFilaMinima = ultimoMattoncino
-		}
-	}
-
-	// 5. dispongo la fila
-	if distanzaMinima == infinito {
+	// 3. dispongo la fila
+	if distanzaMinima := trovaMinimo(); distanzaMinima == infinito {
 		fmt.Printf("non esiste fila da %s a %s\n", alpha, beta)
 	} else {
-		listaNomi := ""
-		mattoncino := ultimoMattoncinoFilaMinima
+		listaBordi := make([]Bordo, distanzaMinima+1)
+
 		bordo := Bordo(beta)
-
-		for {
-			direzione := Plus
-			if bordo == g.mattoncini[mattoncino].sinistra {
-				direzione = Minus
-			}
-
-			listaNomi = string(direzione) + mattoncino + listaNomi
-
-			var found bool
-			bordo = bordoDaDirezione(g.mattoncini[mattoncino], direzione, "sinistra")
-			mattoncino, found = precedentiFilaMinima[mattoncino]
-
-			if !found {
-				break
-			}
-			listaNomi = " " + listaNomi
+		for i := distanzaMinima; i >= 0; i-- {
+			listaBordi[i] = bordo
+			bordo = precedenti[bordo]
 		}
 
+		listaNomi := listaNomiDaListaBordi(g, listaBordi)
 		disponiFila(g, listaNomi)
 	}
 }
@@ -326,8 +305,10 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 	// 1. creo lista di adiacenza
 	archi := make(map[Bordo][]NomeMattoncino)
-	for mattoncino := range g.scatola {
-		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino)
+	for nomeMattoncino, mattoncino := range g.mattoncini {
+		if mattoncino.fila == "" {
+			aggiungiAListaDiAdiacenzaDaNome(g, archi, nomeMattoncino)
+		}
 	}
 	for _, mattoncino := range g.file[filaDaCalcolare] {
 		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino.nome)
@@ -455,7 +436,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	g := gioco{mattoncini: make(map[NomeMattoncino]Mattoncino), scatola: make(map[NomeMattoncino]bool), file: make(map[NomeFila]Fila)}
+	g := gioco{mattoncini: make(map[NomeMattoncino]Mattoncino), file: make(map[NomeFila]Fila)}
 
 	for scanner.Scan() {
 		input := scanner.Text()
