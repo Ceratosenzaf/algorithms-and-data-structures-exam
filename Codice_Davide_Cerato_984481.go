@@ -93,11 +93,16 @@ func stampaMattoncino(g gioco, sigma string) {
 func disponiFila(g gioco, listaNomi string) {
 	mattonciniOrdinati := strings.Split(listaNomi, " ")
 
+	visti := make(map[NomeMattoncino]bool)
 	for _, mattoncinoOrdinato := range mattonciniOrdinati {
 		nome := mattoncinoOrdinato[1:]
 		if presente := g.scatola[nome]; !presente {
 			return
 		}
+		if duplicato := visti[nome]; duplicato {
+			return
+		}
+		visti[nome] = true
 	}
 
 	for i := 0; i < len(mattonciniOrdinati)-1; i++ {
