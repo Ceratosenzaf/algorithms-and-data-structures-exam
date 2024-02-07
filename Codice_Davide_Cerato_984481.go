@@ -128,7 +128,10 @@ func eliminaFila(g gioco, sigma string) {
 	filaDaEliminare := g.mattoncini[sigma].fila
 	for _, elementoFila := range g.file[filaDaEliminare] {
 		g.scatola[elementoFila.nome] = true
-		g.mattoncini[elementoFila.nome] = Mattoncino{sinistra: g.mattoncini[elementoFila.nome].sinistra, destra: g.mattoncini[elementoFila.nome].destra}
+		g.mattoncini[elementoFila.nome] = Mattoncino{
+			sinistra: g.mattoncini[elementoFila.nome].sinistra,
+			destra:   g.mattoncini[elementoFila.nome].destra,
+		}
 	}
 	delete(g.file, filaDaEliminare)
 }
@@ -297,11 +300,9 @@ func indiceCacofonia(g gioco, sigma string) {
 	}
 
 	somma := 0
-	fila := g.file[filaDaCalcolare]
-
-	for i := 0; i < len(fila)-1; i++ {
-		mattoncino := fila[i].nome
-		proxMattoncino := fila[i+1].nome
+	for i := 0; i < len(g.file[filaDaCalcolare])-1; i++ {
+		mattoncino := g.file[filaDaCalcolare][i].nome
+		proxMattoncino := g.file[filaDaCalcolare][i+1].nome
 
 		somma += len(sottostringaMassima(g, mattoncino, proxMattoncino))
 	}
@@ -376,7 +377,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 		// 2.2.2 controllo se ho possibili mattoncini
 		if len(possibiliMattoncini) == 0 {
-			fmt.Println("indefinito 1")
+			fmt.Println("indefinito")
 			return
 		}
 
@@ -408,7 +409,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 			// 2.2.6 controllo se ho trovato almeno una lista possibile
 			if len(temp) == 0 {
-				fmt.Println("indefinito 2")
+				fmt.Println("indefinito")
 				return
 			}
 
@@ -466,7 +467,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 	// 5. stampo il risultato
 	if costoMinimo == infinito {
-		fmt.Println("indefinito 3")
+		fmt.Println("indefinito")
 	} else {
 		fmt.Println(costoMinimo)
 	}
