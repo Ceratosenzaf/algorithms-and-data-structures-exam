@@ -15,7 +15,7 @@ type Bordo string
 type Mattoncino struct {
 	sinistra Bordo    // α
 	destra   Bordo    // β
-	fila     NomeFila // x = nella fila x, "" = nessuna fila
+	fila     NomeFila // x = nella fila x, "" = nella scatola
 }
 
 type Direzione string
@@ -61,6 +61,23 @@ func stampaMattoncinoInDirezione(g gioco, sigma string, dir Direzione) {
 		} else {
 			fmt.Printf("%s: %s, %s\n", sigma, mattoncino.destra, mattoncino.sinistra)
 		}
+	}
+}
+
+func aggiungiAListaDiAdiacenzaDaNome(g gioco, archi map[Bordo][]NomeMattoncino, sigma string) {
+	sinistra := g.mattoncini[sigma].sinistra
+	destra := g.mattoncini[sigma].destra
+
+	if arco, ok := archi[sinistra]; !ok {
+		archi[sinistra] = []NomeMattoncino{sigma}
+	} else {
+		archi[sinistra] = append(arco, sigma)
+	}
+
+	if arco, ok := archi[destra]; !ok {
+		archi[destra] = []NomeMattoncino{sigma}
+	} else {
+		archi[destra] = append(arco, sigma)
 	}
 }
 
@@ -139,22 +156,8 @@ func eliminaFila(g gioco, sigma string) {
 func disponiFilaMinima(g gioco, alpha, beta string) {
 	// 1. creo lista di adiacenza
 	archi := make(map[Bordo][]NomeMattoncino)
-
 	for mattoncino := range g.scatola {
-		sinistra := g.mattoncini[mattoncino].sinistra
-		destra := g.mattoncini[mattoncino].destra
-
-		if arco, ok := archi[sinistra]; !ok {
-			archi[sinistra] = []NomeMattoncino{mattoncino}
-		} else {
-			archi[sinistra] = append(arco, mattoncino)
-		}
-
-		if arco, ok := archi[destra]; !ok {
-			archi[destra] = []NomeMattoncino{mattoncino}
-		} else {
-			archi[destra] = append(arco, mattoncino)
-		}
+		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino)
 	}
 
 	// 2. inizializzo le strutture dati
@@ -318,39 +321,11 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 	// 1. creo lista di adiacenza
 	archi := make(map[Bordo][]NomeMattoncino)
-
 	for mattoncino := range g.scatola {
-		sinistra := g.mattoncini[mattoncino].sinistra
-		destra := g.mattoncini[mattoncino].destra
-
-		if arco, ok := archi[sinistra]; !ok {
-			archi[sinistra] = []NomeMattoncino{mattoncino}
-		} else {
-			archi[sinistra] = append(arco, mattoncino)
-		}
-
-		if arco, ok := archi[destra]; !ok {
-			archi[destra] = []NomeMattoncino{mattoncino}
-		} else {
-			archi[destra] = append(arco, mattoncino)
-		}
+		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino)
 	}
-
 	for _, mattoncino := range g.file[filaDaCalcolare] {
-		sinistra := g.mattoncini[mattoncino.nome].sinistra
-		destra := g.mattoncini[mattoncino.nome].destra
-
-		if arco, ok := archi[sinistra]; !ok {
-			archi[sinistra] = []NomeMattoncino{mattoncino.nome}
-		} else {
-			archi[sinistra] = append(arco, mattoncino.nome)
-		}
-
-		if arco, ok := archi[destra]; !ok {
-			archi[destra] = []NomeMattoncino{mattoncino.nome}
-		} else {
-			archi[destra] = append(arco, mattoncino.nome)
-		}
+		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino.nome)
 	}
 
 	// 2. creo le strutture dati
