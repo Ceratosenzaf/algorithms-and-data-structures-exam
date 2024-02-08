@@ -33,10 +33,13 @@ type MattoncinoOrdinato struct {
 type NomeFila string // +a -b ... -z
 type Fila []MattoncinoOrdinato
 
+type Scatola map[Bordo]map[Bordo]map[NomeMattoncino]bool
+type ScatolaSenzaNomi map[Bordo]map[Bordo]int
+
 type gioco struct {
 	mattoncini map[NomeMattoncino]Mattoncino
 	file       map[NomeFila]Fila
-	scatola    map[Bordo]map[Bordo]int
+	scatola    Scatola
 }
 
 const INFINITO = math.MaxInt64
@@ -65,7 +68,7 @@ func stampaMattoncinoInDirezione(g gioco, sigma string, dir Direzione) {
 	}
 }
 
-func riduciORimuovi(target map[Bordo]map[Bordo]int, a, b Bordo) {
+func riduciORimuovi(target ScatolaSenzaNomi, a, b Bordo) {
 	if target[a][b] > 1 {
 		target[a][b] = target[a][b] - 1
 	} else {
@@ -85,68 +88,83 @@ func riduciORimuovi(target map[Bordo]map[Bordo]int, a, b Bordo) {
 	}
 }
 
-func aggiungiMattoncinoAScatola(g gioco, m Mattoncino) {
-	if _, ok := g.scatola[m.sinistra]; !ok {
-		g.scatola[m.sinistra] = make(map[Bordo]int)
+func aggiungiMattoncinoAScatola(g gioco, m NomeMattoncino) {
+	a := g.mattoncini[m].sinistra
+	b := g.mattoncini[m].destra
+
+	if _, ok := g.scatola[a]; !ok {
+		g.scatola[a] = make(map[Bordo]map[NomeMattoncino]bool)
 	}
-	if _, ok := g.scatola[m.destra]; !ok {
-		g.scatola[m.destra] = make(map[Bordo]int)
+	if _, ok := g.scatola[b]; !ok {
+		g.scatola[b] = make(map[Bordo]map[NomeMattoncino]bool)
 	}
-	g.scatola[m.sinistra][m.destra] = g.scatola[m.sinistra][m.destra] + 1
-	g.scatola[m.destra][m.sinistra] = g.scatola[m.destra][m.sinistra] + 1
+
+	if _, ok := g.scatola[a][b]; !ok {
+		g.scatola[a][b] = make(map[NomeMattoncino]bool)
+	}
+	if _, ok := g.scatola[b][a]; !ok {
+		g.scatola[b][a] = make(map[NomeMattoncino]bool)
+	}
+
+	g.scatola[a][b][m] = true
+	g.scatola[b][a][m] = true
 }
 
 func rimuoviMattoncinoDaScatola(g gioco, m NomeMattoncino) {
-	riduciORimuovi(g.scatola, g.mattoncini[m].sinistra, g.mattoncini[m].destra)
+	a := g.mattoncini[m].sinistra
+	b := g.mattoncini[m].destra
+
+	delete(g.scatola[a][b], m)
+	delete(g.scatola[b][a], m)
+
+	if len(g.scatola[a][b]) == 0 {
+		delete(g.scatola[a], b)
+	}
+	if len(g.scatola[b][a]) == 0 {
+		delete(g.scatola[b], a)
+	}
+
+	if len(g.scatola[a]) == 0 {
+		delete(g.scatola, a)
+	}
+	if len(g.scatola[b]) == 0 {
+		delete(g.scatola, b)
+	}
 }
 
-func copiaScatola(g gioco, target map[Bordo]map[Bordo]int) {
+func trascriviScatolaSenzaNomi(g gioco, target map[Bordo]map[Bordo]int) {
 	for b, bordiAdiacenti := range g.scatola {
 		if _, ok := target[b]; !ok {
 			target[b] = make(map[Bordo]int)
 		}
 		for v, d := range bordiAdiacenti {
-			target[b][v] = d
+			target[b][v] = len(d)
 		}
 	}
 }
 
 // funzioni del progetto
 func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
-	archi := make(map[Bordo]map[Bordo]map[NomeMattoncino]bool)
-	for nomeMattoncino, mattoncino := range g.mattoncini {
-		if mattoncino.fila == "" {
-			if _, ok := archi[mattoncino.sinistra]; !ok {
-				archi[mattoncino.sinistra] = make(map[Bordo]map[NomeMattoncino]bool)
-			}
-			if _, ok := archi[mattoncino.sinistra][mattoncino.destra]; !ok {
-				archi[mattoncino.sinistra][mattoncino.destra] = make(map[NomeMattoncino]bool)
-			}
-			archi[mattoncino.sinistra][mattoncino.destra][nomeMattoncino] = true
-		}
-	}
+	usati := make(map[NomeMattoncino]bool)
 
 	for i := 0; i < len(listaBordi)-1; i++ {
 		bordo := listaBordi[i]
 		proxBordo := listaBordi[i+1]
 
-		var dir Direzione
 		var mattoncino NomeMattoncino
+		dir := Plus
 
-		if mattonciniDritti := archi[bordo][proxBordo]; len(mattonciniDritti) > 0 {
-			dir = Plus
-			for m := range mattonciniDritti {
-				mattoncino = m
-				break
+		if mattoncini := g.scatola[bordo][proxBordo]; len(mattoncini) > 0 {
+			for m := range mattoncini {
+				if !usati[m] {
+					mattoncino = m
+					break
+				}
 			}
-			delete(mattonciniDritti, mattoncino)
-		} else if mattonciniRovesci := archi[proxBordo][bordo]; len(mattonciniRovesci) > 0 {
-			dir = Minus
-			for m := range mattonciniRovesci {
-				mattoncino = m
-				break
+			usati[mattoncino] = true
+			if g.mattoncini[mattoncino].sinistra != bordo {
+				dir = Minus
 			}
-			delete(mattonciniRovesci, mattoncino)
 		}
 
 		if mattoncino == "" {
@@ -178,7 +196,7 @@ func aggiungiAListaDiAdiacenzaDaNome(g gioco, archi map[Bordo][]NomeMattoncino, 
 
 func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
 	g.mattoncini[sigma] = Mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
-	aggiungiMattoncinoAScatola(g, g.mattoncini[sigma])
+	aggiungiMattoncinoAScatola(g, sigma)
 }
 
 func stampaMattoncino(g gioco, sigma string) {
@@ -248,7 +266,7 @@ func eliminaFila(g gioco, sigma string) {
 			sinistra: g.mattoncini[elementoFila.nome].sinistra,
 			destra:   g.mattoncini[elementoFila.nome].destra,
 		}
-		aggiungiMattoncinoAScatola(g, g.mattoncini[elementoFila.nome])
+		aggiungiMattoncinoAScatola(g, elementoFila.nome)
 	}
 	delete(g.file, filaDaEliminare)
 }
@@ -267,15 +285,15 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 		}
 
 		// mattoncino con bordi alpha e beta
-		if g.scatola[Bordo(alpha)][Bordo(beta)] > 0 {
+		if len(g.scatola[Bordo(alpha)][Bordo(beta)]) > 0 {
 			precedenti[Bordo(beta)] = Bordo(alpha)
 			return 1
 		}
 
 		visitati := make(map[Bordo]bool)
 		distanze := make(map[Bordo]int)
-		archiDisponibili := make(map[Bordo]map[Bordo]int, len(g.scatola))
-		copiaScatola(g, archiDisponibili)
+		archiDisponibili := make(ScatolaSenzaNomi, len(g.scatola))
+		trascriviScatolaSenzaNomi(g, archiDisponibili)
 
 		bfs := func(partenza, arrivo Bordo) (costo int) {
 			coda := []Bordo{partenza}
@@ -326,7 +344,7 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 			visitati[bordoAdiacenteAlpha] = true
 			distanze[bordoAdiacenteAlpha] = 1
 			precedenti[bordoAdiacenteAlpha] = Bordo(alpha)
-			copiaScatola(g, archiDisponibili)
+			trascriviScatolaSenzaNomi(g, archiDisponibili)
 			riduciORimuovi(archiDisponibili, bordoAdiacenteAlpha, Bordo(alpha))
 
 			// calcolo
@@ -554,7 +572,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	g := gioco{mattoncini: make(map[NomeMattoncino]Mattoncino), file: make(map[NomeFila]Fila), scatola: make(map[Bordo]map[Bordo]int)}
+	g := gioco{mattoncini: make(map[NomeMattoncino]Mattoncino), file: make(map[NomeFila]Fila), scatola: make(Scatola)}
 
 	for scanner.Scan() {
 		input := scanner.Text()
@@ -612,5 +630,7 @@ func main() {
 			fmt.Println("invalid code")
 			break
 		}
+
+		fmt.Println("----------")
 	}
 }
