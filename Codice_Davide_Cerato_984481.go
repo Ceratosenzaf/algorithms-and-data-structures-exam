@@ -81,8 +81,6 @@ func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 		bordo := listaBordi[i]
 		proxBordo := listaBordi[i+1]
 
-		fmt.Printf("Controllando mattoncino da '%s' a '%s'\t", bordo, proxBordo)
-
 		var dir Direzione
 		var mattoncino NomeMattoncino
 
@@ -100,15 +98,11 @@ func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 				break
 			}
 			delete(mattonciniRovesci, mattoncino)
-		} else {
-			return ""
 		}
 
 		if mattoncino == "" {
 			return ""
 		}
-
-		fmt.Printf("dir='%s' nome='%s'\n", dir, mattoncino)
 
 		listaNomi += " " + string(dir) + mattoncino
 	}
@@ -243,18 +237,12 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 				bordo := coda[0]
 				coda = coda[1:]
 
-				fmt.Println()
-				fmt.Println("Controllando bordo", bordo)
-				fmt.Println(archiDisponibili[bordo])
-
 				for proxBordo, d := range archiDisponibili[bordo] {
 					if !visitati[proxBordo] && d > 0 {
 						archiDisponibili[bordo][proxBordo] = archiDisponibili[bordo][proxBordo] - 1
 						archiDisponibili[proxBordo][bordo] = archiDisponibili[proxBordo][bordo] - 1
 
 						visitati[proxBordo] = true
-
-						fmt.Printf("Controllando bordo '%s' da '%s'\n", proxBordo, bordo)
 
 						distanze[proxBordo] = distanze[bordo] + 1
 						precedenti[proxBordo] = bordo
@@ -264,8 +252,6 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 						}
 
 						coda = append(coda, proxBordo)
-					} else {
-						fmt.Printf("Saltando controllo del bordo '%s' da '%s'\n", proxBordo, bordo)
 					}
 				}
 			}
