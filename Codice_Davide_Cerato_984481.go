@@ -64,13 +64,16 @@ func stampaMattoncinoInDirezione(g gioco, sigma string, dir Direzione) {
 }
 
 func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
-	archi := make(map[Bordo]map[Bordo][]NomeMattoncino)
+	archi := make(map[Bordo]map[Bordo]map[NomeMattoncino]bool)
 	for nomeMattoncino, mattoncino := range g.mattoncini {
 		if mattoncino.fila == "" {
 			if _, ok := archi[mattoncino.sinistra]; !ok {
-				archi[mattoncino.sinistra] = make(map[Bordo][]string)
+				archi[mattoncino.sinistra] = make(map[Bordo]map[NomeMattoncino]bool)
 			}
-			archi[mattoncino.sinistra][mattoncino.destra] = append(archi[mattoncino.sinistra][mattoncino.destra], nomeMattoncino)
+			if _, ok := archi[mattoncino.sinistra][mattoncino.destra]; !ok {
+				archi[mattoncino.sinistra][mattoncino.destra] = make(map[NomeMattoncino]bool)
+			}
+			archi[mattoncino.sinistra][mattoncino.destra][nomeMattoncino] = true
 		}
 	}
 
@@ -78,18 +81,34 @@ func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 		bordo := listaBordi[i]
 		proxBordo := listaBordi[i+1]
 
+		fmt.Printf("Controllando mattoncino da '%s' a '%s'\t", bordo, proxBordo)
+
 		var dir Direzione
 		var mattoncino NomeMattoncino
 
 		if mattonciniDritti := archi[bordo][proxBordo]; len(mattonciniDritti) > 0 {
 			dir = Plus
-			mattoncino = mattonciniDritti[0]
+			for m := range mattonciniDritti {
+				mattoncino = m
+				break
+			}
+			delete(mattonciniDritti, mattoncino)
 		} else if mattonciniRovesci := archi[proxBordo][bordo]; len(mattonciniRovesci) > 0 {
 			dir = Minus
-			mattoncino = mattonciniRovesci[0]
+			for m := range mattonciniRovesci {
+				mattoncino = m
+				break
+			}
+			delete(mattonciniRovesci, mattoncino)
 		} else {
-			break
+			return ""
 		}
+
+		if mattoncino == "" {
+			return ""
+		}
+
+		fmt.Printf("dir='%s' nome='%s'\n", dir, mattoncino)
 
 		listaNomi += " " + string(dir) + mattoncino
 	}
@@ -188,44 +207,130 @@ func eliminaFila(g gioco, sigma string) {
 	delete(g.file, filaDaEliminare)
 }
 
+// TODO: checks
+// 1. estremi diversi, mattoncini diversi
+// 2. estremi diversi, stesso mattoncino
+// 3. estremi uguali, mattoncini diversi
+// 4. estremi uguali, stesso mattoncino
 func disponiFilaMinima(g gioco, alpha, beta string) {
 	// 1. inizializzo le strutture dati
-	archi := make(map[Bordo][]Bordo)
+	archi := make(map[Bordo]map[Bordo]int)
 	for _, mattoncino := range g.mattoncini {
 		if mattoncino.fila == "" {
-			archi[mattoncino.sinistra] = append(archi[mattoncino.sinistra], mattoncino.destra)
-			archi[mattoncino.destra] = append(archi[mattoncino.destra], mattoncino.sinistra)
+			if _, ok := archi[mattoncino.sinistra]; !ok {
+				archi[mattoncino.sinistra] = make(map[Bordo]int)
+			}
+			if _, ok := archi[mattoncino.destra]; !ok {
+				archi[mattoncino.destra] = make(map[Bordo]int)
+			}
+			archi[mattoncino.sinistra][mattoncino.destra] = archi[mattoncino.sinistra][mattoncino.destra] + 1
+			archi[mattoncino.destra][mattoncino.sinistra] = archi[mattoncino.destra][mattoncino.sinistra] + 1
 		}
 	}
 
 	visitati := make(map[Bordo]bool)
 	distanze := make(map[Bordo]int)
 	precedenti := make(map[Bordo]Bordo)
-	coda := []Bordo{Bordo(alpha)}
 
 	// 2. calcolo la distanza minima
 	trovaMinimo := func() int {
-		for len(coda) > 0 {
-			bordo := coda[0]
-			coda = coda[1:]
+		var archiDisponibili map[Bordo]map[Bordo]int
 
-			for _, proxBordo := range archi[bordo] {
-				if !visitati[proxBordo] {
+		bfs := func(partenza, arrivo Bordo) (costo int) {
 
-					visitati[proxBordo] = true
+			coda := []Bordo{partenza}
+			for len(coda) > 0 {
+				bordo := coda[0]
+				coda = coda[1:]
 
-					distanze[proxBordo] = distanze[bordo] + 1
-					precedenti[proxBordo] = bordo
+				fmt.Println()
+				fmt.Println("Controllando bordo", bordo)
+				fmt.Println(archiDisponibili[bordo])
 
-					if proxBordo == Bordo(beta) {
-						return distanze[proxBordo]
+				for proxBordo, d := range archiDisponibili[bordo] {
+					if !visitati[proxBordo] && d > 0 {
+						archiDisponibili[bordo][proxBordo] = archiDisponibili[bordo][proxBordo] - 1
+						archiDisponibili[proxBordo][bordo] = archiDisponibili[proxBordo][bordo] - 1
+
+						visitati[proxBordo] = true
+
+						fmt.Printf("Controllando bordo '%s' da '%s'\n", proxBordo, bordo)
+
+						distanze[proxBordo] = distanze[bordo] + 1
+						precedenti[proxBordo] = bordo
+
+						if proxBordo == arrivo {
+							return distanze[proxBordo]
+						}
+
+						coda = append(coda, proxBordo)
+					} else {
+						fmt.Printf("Saltando controllo del bordo '%s' da '%s'\n", proxBordo, bordo)
 					}
-
-					coda = append(coda, proxBordo)
 				}
 			}
+
+			return infinito
 		}
-		return infinito
+
+		if archi[Bordo(alpha)][Bordo(beta)] > 0 {
+			precedenti[Bordo(beta)] = Bordo(alpha)
+			return 1
+		}
+
+		if alpha != beta {
+			for b := range archi {
+				distanze[b] = infinito
+			}
+			distanze[Bordo(alpha)] = 0
+			archiDisponibili = archi
+			return bfs(Bordo(alpha), Bordo(beta))
+
+		}
+
+		archiDisponibili = make(map[Bordo]map[Bordo]int)
+
+		distanzaMinima := infinito
+		precedentiDistanzaMinima := make(map[Bordo]Bordo)
+		for bordoAdiacenteAlpha := range archi[Bordo(alpha)] {
+			// reset strutture dati
+			for b := range archi {
+				visitati[b] = false
+				distanze[b] = infinito
+				precedenti[b] = ""
+			}
+			visitati[bordoAdiacenteAlpha] = true
+			distanze[bordoAdiacenteAlpha] = 0
+
+			// reset archi disponibili
+			for b, bordiAdiacenti := range archi {
+				if _, ok := archiDisponibili[b]; !ok {
+					archiDisponibili[b] = make(map[Bordo]int)
+				}
+				for v, d := range bordiAdiacenti {
+					archiDisponibili[b][v] = d
+				}
+			}
+
+			archiDisponibili[bordoAdiacenteAlpha][Bordo(alpha)] = archiDisponibili[bordoAdiacenteAlpha][Bordo(alpha)] - 1
+			archiDisponibili[Bordo(alpha)][bordoAdiacenteAlpha] = archiDisponibili[Bordo(alpha)][bordoAdiacenteAlpha] - 1
+
+			// calcolo
+			distanza := bfs(bordoAdiacenteAlpha, Bordo(beta)) + 1
+
+			// confronto
+			if distanza < distanzaMinima {
+				distanzaMinima = distanza
+				for k, v := range precedenti {
+					precedentiDistanzaMinima[k] = v
+				}
+				precedentiDistanzaMinima[bordoAdiacenteAlpha] = Bordo(alpha)
+			}
+
+		}
+		precedenti = precedentiDistanzaMinima
+		return distanzaMinima
+
 	}
 
 	// 3. dispongo la fila
@@ -494,5 +599,9 @@ func main() {
 			fmt.Println("invalid code")
 			break
 		}
+
+		fmt.Println(g.mattoncini)
+		fmt.Println(g.file)
+		fmt.Println("-----------------------")
 	}
 }
