@@ -49,10 +49,10 @@
 ---
 
 # disponiFilaMinima
-## uno dei due bordi inesistente
+## nessun mattoncino con bordo alpha o beta
 - tempo: O(1)
 - spazio: O(1)
-## singolo mattoncino
+## singolo mattoncino con bordi alpha e beta
 - tempo: O(1)
 - spazio: O(1)
 ## alpha e beta diversi
