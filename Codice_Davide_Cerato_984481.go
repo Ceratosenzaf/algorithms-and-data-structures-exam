@@ -231,7 +231,6 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 		var archiDisponibili map[Bordo]map[Bordo]int
 
 		bfs := func(partenza, arrivo Bordo) (costo int) {
-
 			coda := []Bordo{partenza}
 			for len(coda) > 0 {
 				bordo := coda[0]
@@ -585,9 +584,5 @@ func main() {
 			fmt.Println("invalid code")
 			break
 		}
-
-		fmt.Println(g.mattoncini)
-		fmt.Println(g.file)
-		fmt.Println("-----------------------")
 	}
 }
