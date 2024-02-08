@@ -49,11 +49,12 @@
 ---
 
 # disponiFilaMinima
+## uno dei due bordi inesistente
+- tempo: O(1)
+- spazio: O(1)
 ## singolo mattoncino
-- tempo: O(n)
-  - len(scatola) = n
-- spazio: O(m)
-  - len(bordi distinti) = m
+- tempo: O(1)
+- spazio: O(1)
 ## alpha e beta diversi
 - tempo: O(n+m+k) = O(n+m)
   - len(scatola) = n
