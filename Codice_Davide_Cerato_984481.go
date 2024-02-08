@@ -39,7 +39,7 @@ type gioco struct {
 	scatola    map[Bordo]map[Bordo]int
 }
 
-const infinito = math.MaxInt64
+const INFINITO = math.MaxInt64
 
 // funzioni per uso interno
 func bordoDaDirezione(m Mattoncino, dir Direzione, posizioneBordo string) Bordo {
@@ -260,10 +260,10 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 	trovaMinimo := func() int {
 		// bordi non presenti
 		if _, ok := g.scatola[Bordo(alpha)]; !ok {
-			return infinito
+			return INFINITO
 		}
 		if _, ok := g.scatola[Bordo(beta)]; !ok {
-			return infinito
+			return INFINITO
 		}
 
 		// mattoncino con bordi alpha e beta
@@ -301,26 +301,26 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 				}
 			}
 
-			return infinito
+			return INFINITO
 		}
 
 		// mattoncini diversi con alpha e beta diversi
 		if alpha != beta {
 			for b := range g.scatola {
-				distanze[b] = infinito
+				distanze[b] = INFINITO
 			}
 			distanze[Bordo(alpha)] = 0
 			return bfs(Bordo(alpha), Bordo(beta))
 		}
 
 		// mattoncini diversi con alpha e beta uguali
-		distanzaMinima := infinito
+		distanzaMinima := INFINITO
 		precedentiDistanzaMinima := make(map[Bordo]Bordo)
 		for bordoAdiacenteAlpha := range g.scatola[Bordo(alpha)] {
 			// reset strutture dati
 			for b := range g.scatola {
 				visitati[b] = false
-				distanze[b] = infinito
+				distanze[b] = INFINITO
 				precedenti[b] = ""
 			}
 			visitati[bordoAdiacenteAlpha] = true
@@ -346,7 +346,7 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 	}
 
 	// 2. calcolo la distanza minima
-	if distanzaMinima := trovaMinimo(); distanzaMinima == infinito {
+	if distanzaMinima := trovaMinimo(); distanzaMinima == INFINITO {
 		fmt.Printf("non esiste fila da %s a %s\n", alpha, beta)
 	} else {
 		// 3. dispongo la fila
@@ -535,7 +535,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 	}
 
 	// 4. calcolo il costo
-	costoMinimo := infinito
+	costoMinimo := INFINITO
 	for _, mattonciniListaBordi := range possibiliMattonciniListaBordi {
 		max := sottoArrayMassimo(mattonciniFila, mattonciniListaBordi)
 		costo := (len(mattonciniFila) - max) + (len(mattonciniListaBordi) - max)
@@ -545,7 +545,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 	}
 
 	// 5. stampo il risultato
-	if costoMinimo == infinito {
+	if costoMinimo == INFINITO {
 		fmt.Println("indefinito")
 	} else {
 		fmt.Println(costoMinimo)
