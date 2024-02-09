@@ -1,0 +1,19 @@
+ela
+caello
+
+topo
+to
+ela
+(
+E: stella, luna
+F: luna, cerchio
+)
+0
+(
+CAPPELLO: stella, fiore
+GATTO: fiore, quadrato
+ASTRO: quadrato, cerchio
+)
+5
+indefinito
+1

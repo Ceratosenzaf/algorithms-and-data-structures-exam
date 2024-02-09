@@ -1,0 +1,14 @@
+m stella fiore C
+m sole stella D
+m luna stella E
+m cerchio luna F
+d +D +C
+S D
+d -C -E -F
+S E
+e D
+d -C -E -F
+S E
+e C
+S C
+q

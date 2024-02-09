@@ -1,0 +1,9 @@
+(
+D: sole, stella
+C: stella, fiore
+)
+(
+C: fiore, stella
+E: stella, luna
+F: luna, cerchio
+)

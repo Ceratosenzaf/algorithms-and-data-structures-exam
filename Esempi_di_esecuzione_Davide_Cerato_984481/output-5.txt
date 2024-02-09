@@ -1,0 +1,14 @@
+(
+H: fiore, croce
+I: croce, cuore
+)
+1
+1
+1
+2
+3
+(
+J: croce, sole
+B: sole, croce
+)
+0

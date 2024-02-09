@@ -1,0 +1,22 @@
+M mela tela
+M cappello cammello
+M cane topo
+M topo topolino
+M gatto topo
+M tela elefante
+m cerchio quadrato ASTRO
+m sole croce B
+m stella fiore CAPPELLO
+m sole stella D
+m luna stella E
+m cerchio luna F
+m fiore quadrato GATTO
+f stella cerchio
+S E
+i E
+f stella cerchio
+S GATTO
+i GATTO
+c E stella luna cerchio quadrato
+c E sole stella luna cerchio
+q

@@ -1,0 +1,24 @@
+m cerchio quadrato A
+m sole croce B
+m stella fiore C
+m sole stella D
+m luna stella E
+m cerchio luna F
+m fiore quadrato G
+m croce fiore H
+m cuore croce I
+m croce sole J
+m cuore cerchio K
+m casa sole L
+f picche cuori
+f cerchio quadrato
+S A
+f casa cuore
+S L
+e L
+f croce croce
+S J
+e A
+f croce croce
+S I
+q

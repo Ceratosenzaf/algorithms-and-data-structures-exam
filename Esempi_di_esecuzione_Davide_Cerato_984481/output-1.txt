@@ -1,0 +1,6 @@
+A: cerchio, quadrato
+B: sole, croce
+(
+B: sole, croce
+H: croce, fiore
+)

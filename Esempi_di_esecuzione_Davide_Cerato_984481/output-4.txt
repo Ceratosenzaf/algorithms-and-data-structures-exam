@@ -1,0 +1,20 @@
+non esiste fila da picche a cuori
+(
+A: cerchio, quadrato
+)
+(
+L: casa, sole
+B: sole, croce
+I: croce, cuore
+)
+(
+B: croce, sole
+J: sole, croce
+)
+(
+H: croce, fiore
+G: fiore, quadrato
+A: quadrato, cerchio
+K: cerchio, cuore
+I: cuore, croce
+)
