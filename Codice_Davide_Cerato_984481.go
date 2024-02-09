@@ -1,4 +1,5 @@
 // Davide Cerato (matricola 984481)
+
 package main
 
 import (
@@ -9,7 +10,7 @@ import (
 	"strings"
 )
 
-type NomeMattoncino = string
+type NomeMattoncino = string // σ
 type Bordo string
 
 type Mattoncino struct {
@@ -17,6 +18,8 @@ type Mattoncino struct {
 	destra   Bordo    // β
 	fila     NomeFila // x = nella fila x, "" = nella scatola
 }
+
+type Mattoncini map[NomeMattoncino]Mattoncino
 
 type Direzione string
 
@@ -30,15 +33,18 @@ type MattoncinoOrdinato struct {
 	direzione Direzione
 }
 
-type NomeFila string // +a -b ... -z
+type NomeFila string // +σ1 -σ2 ... -σn
 type Fila []MattoncinoOrdinato
 
-type Scatola map[Bordo]map[Bordo]map[NomeMattoncino]bool
+type File map[NomeFila]Fila
+
+type SetMattoncini map[NomeMattoncino]bool
+type Scatola map[Bordo]map[Bordo]SetMattoncini
 type ScatolaSenzaNomi map[Bordo]map[Bordo]int
 
 type gioco struct {
-	mattoncini map[NomeMattoncino]Mattoncino
-	file       map[NomeFila]Fila
+	mattoncini Mattoncini
+	file       File
 	scatola    Scatola
 }
 
@@ -88,26 +94,30 @@ func riduciORimuovi(target ScatolaSenzaNomi, a, b Bordo) {
 	}
 }
 
-func aggiungiMattoncinoAScatola(g gioco, m NomeMattoncino) {
+func aggiungiAListaAdiacenza(g gioco, target Scatola, m NomeMattoncino) {
 	a := g.mattoncini[m].sinistra
 	b := g.mattoncini[m].destra
 
-	if _, ok := g.scatola[a]; !ok {
-		g.scatola[a] = make(map[Bordo]map[NomeMattoncino]bool)
+	if _, ok := target[a]; !ok {
+		target[a] = make(map[Bordo]SetMattoncini)
 	}
-	if _, ok := g.scatola[b]; !ok {
-		g.scatola[b] = make(map[Bordo]map[NomeMattoncino]bool)
-	}
-
-	if _, ok := g.scatola[a][b]; !ok {
-		g.scatola[a][b] = make(map[NomeMattoncino]bool)
-	}
-	if _, ok := g.scatola[b][a]; !ok {
-		g.scatola[b][a] = make(map[NomeMattoncino]bool)
+	if _, ok := target[b]; !ok {
+		target[b] = make(map[Bordo]SetMattoncini)
 	}
 
-	g.scatola[a][b][m] = true
-	g.scatola[b][a][m] = true
+	if _, ok := target[a][b]; !ok {
+		target[a][b] = make(SetMattoncini)
+	}
+	if _, ok := target[b][a]; !ok {
+		target[b][a] = make(SetMattoncini)
+	}
+
+	target[a][b][m] = true
+	target[b][a][m] = true
+}
+
+func aggiungiMattoncinoAScatola(g gioco, m NomeMattoncino) {
+	aggiungiAListaAdiacenza(g, g.scatola, m)
 }
 
 func rimuoviMattoncinoDaScatola(g gioco, m NomeMattoncino) {
@@ -145,7 +155,7 @@ func trascriviScatolaSenzaNomi(g gioco, target map[Bordo]map[Bordo]int) {
 
 // funzioni del progetto
 func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
-	usati := make(map[NomeMattoncino]bool)
+	usati := make(SetMattoncini)
 
 	for i := 0; i < len(listaBordi)-1; i++ {
 		bordo := listaBordi[i]
@@ -177,23 +187,6 @@ func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 	return listaNomi[1:]
 }
 
-func aggiungiAListaDiAdiacenzaDaNome(g gioco, archi map[Bordo][]NomeMattoncino, sigma string) {
-	sinistra := g.mattoncini[sigma].sinistra
-	destra := g.mattoncini[sigma].destra
-
-	if arco, ok := archi[sinistra]; !ok {
-		archi[sinistra] = []NomeMattoncino{sigma}
-	} else {
-		archi[sinistra] = append(arco, sigma)
-	}
-
-	if arco, ok := archi[destra]; !ok {
-		archi[destra] = []NomeMattoncino{sigma}
-	} else {
-		archi[destra] = append(arco, sigma)
-	}
-}
-
 func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
 	g.mattoncini[sigma] = Mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
 	aggiungiMattoncinoAScatola(g, sigma)
@@ -206,7 +199,7 @@ func stampaMattoncino(g gioco, sigma string) {
 func disponiFila(g gioco, listaNomi string) {
 	mattonciniOrdinati := strings.Split(listaNomi, " ")
 
-	visti := make(map[NomeMattoncino]bool)
+	visti := make(SetMattoncini)
 	for _, mattoncinoOrdinato := range mattonciniOrdinati {
 		nome := mattoncinoOrdinato[1:]
 		if m := g.mattoncini[nome]; m.fila != "" {
@@ -272,7 +265,7 @@ func eliminaFila(g gioco, sigma string) {
 }
 
 func disponiFilaMinima(g gioco, alpha, beta string) {
-	precedenti := make(map[Bordo]Bordo)
+	var precedenti map[Bordo]Bordo
 
 	// 1. funzione di calcolo distanza minima
 	trovaMinimo := func() int {
@@ -286,10 +279,12 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 
 		// mattoncino con bordi alpha e beta
 		if len(g.scatola[Bordo(alpha)][Bordo(beta)]) > 0 {
+			precedenti = make(map[Bordo]Bordo, 1)
 			precedenti[Bordo(beta)] = Bordo(alpha)
 			return 1
 		}
 
+		precedenti = make(map[Bordo]Bordo)
 		visitati := make(map[Bordo]bool)
 		distanze := make(map[Bordo]int)
 		archiDisponibili := make(ScatolaSenzaNomi, len(g.scatola))
@@ -394,26 +389,25 @@ func sottostringaMassima(g gioco, sigma, tao string) string {
 		m, n = n, m
 	}
 
-	current := make([]string, n+1)
-	previous := make([]string, n+1)
+	stringheComuni := make([]string, n+1)
+	prevStringheComuni := make([]string, n+1)
 
 	for i := 1; i <= m; i++ {
-		current, previous = previous, current
-
+		stringheComuni, prevStringheComuni = prevStringheComuni, stringheComuni
 		for j := 1; j <= n; j++ {
 			if sigma[i-1] == tao[j-1] {
-				current[j] = previous[j-1] + string(sigma[i-1])
+				stringheComuni[j] = prevStringheComuni[j-1] + string(sigma[i-1])
 			} else {
-				if len(current[j-1]) > len(previous[j]) {
-					current[j] = current[j-1]
+				if len(stringheComuni[j-1]) > len(prevStringheComuni[j]) {
+					stringheComuni[j] = stringheComuni[j-1]
 				} else {
-					current[j] = previous[j]
+					stringheComuni[j] = prevStringheComuni[j]
 				}
 			}
 		}
 	}
 
-	return current[n]
+	return stringheComuni[n]
 }
 
 func indiceCacofonia(g gioco, sigma string) {
@@ -439,15 +433,10 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 		return
 	}
 
-	// 1. creo lista di adiacenza
-	archi := make(map[Bordo][]NomeMattoncino)
-	for nomeMattoncino, mattoncino := range g.mattoncini {
-		if mattoncino.fila == "" {
-			aggiungiAListaDiAdiacenzaDaNome(g, archi, nomeMattoncino)
-		}
-	}
+	// 1. creo lista di adiacenza della fila
+	archiFila := make(Scatola)
 	for _, mattoncino := range g.file[filaDaCalcolare] {
-		aggiungiAListaDiAdiacenzaDaNome(g, archi, mattoncino.nome)
+		aggiungiAListaAdiacenza(g, archiFila, mattoncino.nome)
 	}
 
 	// 2. creo le strutture dati
@@ -466,10 +455,11 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 		// 2.2.1 trovo mattoncini candidati per il posto
 		var possibiliMattoncini []NomeMattoncino
-		for _, mattoncino := range archi[bordo] {
-			if (g.mattoncini[mattoncino].sinistra == bordo && g.mattoncini[mattoncino].destra == proxBordo) || (g.mattoncini[mattoncino].destra == bordo && g.mattoncini[mattoncino].sinistra == proxBordo) {
-				possibiliMattoncini = append(possibiliMattoncini, mattoncino)
-			}
+		for mattoncino := range g.scatola[bordo][proxBordo] {
+			possibiliMattoncini = append(possibiliMattoncini, mattoncino)
+		}
+		for mattoncino := range archiFila[bordo][proxBordo] {
+			possibiliMattoncini = append(possibiliMattoncini, mattoncino)
 		}
 
 		// 2.2.2 controllo se ho possibili mattoncini
@@ -486,31 +476,34 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 			}
 		}
 		for _, mattonciniListaBordi := range possibiliMattonciniListaBordi {
-			var temp []NomeMattoncino
+			var possibiliFile [][]NomeMattoncino
 
 			for _, mattoncino := range possibiliMattoncini {
 				// 2.2.4 rimuovo liste non possibili perché contenenti elementi duplicati
 				valid := true
+				var possibileFila []NomeMattoncino
 				for _, m := range mattonciniListaBordi {
 					if m == mattoncino {
 						valid = false
 						break
 					}
+					possibileFila = append(possibileFila, m)
 				}
 
 				// 2.2.5 se possibile aggiungo alle possibili liste
 				if valid {
-					temp = append(mattonciniListaBordi, mattoncino)
+					possibileFila = append(possibileFila, mattoncino)
+					possibiliFile = append(possibiliFile, possibileFila)
 				}
 			}
 
 			// 2.2.6 controllo se ho trovato almeno una lista possibile
-			if len(temp) == 0 {
+			if len(possibiliFile) == 0 {
 				fmt.Println("indefinito")
 				return
 			}
 
-			newPossibili = append(newPossibili, temp)
+			newPossibili = append(newPossibili, possibiliFile...)
 		}
 
 		possibiliMattonciniListaBordi = newPossibili
@@ -530,26 +523,26 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 			m, n = n, m
 		}
 
-		current := make([]int, n+1)
-		previous := make([]int, n+1)
+		ordineRelativo := make([]int, n+1)
+		ordineRelativoPrecedente := make([]int, n+1)
 
 		for i := 1; i <= m; i++ {
-			current, previous = previous, current
+			ordineRelativo, ordineRelativoPrecedente = ordineRelativoPrecedente, ordineRelativo
 
 			for j := 1; j <= n; j++ {
 				if a[i-1] == b[j-1] {
-					current[j] = previous[j-1] + 1
+					ordineRelativo[j] = ordineRelativoPrecedente[j-1] + 1
 				} else {
-					if current[j-1] > previous[j] {
-						current[j] = current[j-1]
+					if ordineRelativo[j-1] > ordineRelativoPrecedente[j] {
+						ordineRelativo[j] = ordineRelativo[j-1]
 					} else {
-						current[j] = previous[j]
+						ordineRelativo[j] = ordineRelativoPrecedente[j]
 					}
 				}
 			}
 		}
 
-		return current[n]
+		return ordineRelativo[n]
 	}
 
 	// 4. calcolo il costo
@@ -572,7 +565,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	g := gioco{mattoncini: make(map[NomeMattoncino]Mattoncino), file: make(map[NomeFila]Fila), scatola: make(Scatola)}
+	g := gioco{mattoncini: make(Mattoncini), file: make(File), scatola: make(Scatola)}
 
 	for scanner.Scan() {
 		input := scanner.Text()

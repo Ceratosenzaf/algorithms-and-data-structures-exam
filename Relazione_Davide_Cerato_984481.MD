@@ -43,8 +43,7 @@
 # eliminaFila
 - tempo: O(n)
   - len(fila) = n
-- spazio: O(1) = -O(n) dopo garbage collection
-  - len(fila) = n
+- spazio: O(1)
 
 ---
 
