@@ -13,7 +13,7 @@ import (
 type NomeMattoncino = string // σ
 type Bordo string
 
-type Mattoncino struct {
+type Mattoncino struct { // TODO: cambia nome in mattoncino
 	sinistra Bordo    // α
 	destra   Bordo    // β
 	fila     NomeFila // x = nella fila x, "" = nella scatola
@@ -33,8 +33,8 @@ type MattoncinoOrdinato struct {
 	direzione Direzione
 }
 
-type NomeFila string // +σ1 -σ2 ... -σn
-type Fila []MattoncinoOrdinato
+type NomeFila string           // +σ1 -σ2 ... -σn
+type Fila []MattoncinoOrdinato // TODO: cambia nome in fila
 
 type File map[NomeFila]Fila
 
@@ -441,7 +441,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 	// 2. creo le strutture dati
 	var mattonciniFila []NomeMattoncino
-	var possibiliMattonciniListaBordi [][]NomeMattoncino
+	var possibiliMattonciniPerPosizione [][]NomeMattoncino
 
 	// 2.1 valorizzo lista mattoncini da fila
 	for _, mattoncino := range g.file[filaDaCalcolare] {
@@ -462,51 +462,59 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 			possibiliMattoncini = append(possibiliMattoncini, mattoncino)
 		}
 
-		// 2.2.2 controllo se ho possibili mattoncini
+		// 2.2.2 controllo se ho possibili mattoncini e li setto
 		if len(possibiliMattoncini) == 0 {
 			fmt.Println("indefinito")
 			return
 		}
 
-		// 2.2.3 aggiorno le possibili liste
-		var newPossibili [][]NomeMattoncino
-		if len(possibiliMattonciniListaBordi) == 0 {
-			for _, mattoncino := range possibiliMattoncini {
-				newPossibili = append(newPossibili, []NomeMattoncino{mattoncino})
-			}
-		}
-		for _, mattonciniListaBordi := range possibiliMattonciniListaBordi {
-			var possibiliFile [][]NomeMattoncino
+		possibiliMattonciniPerPosizione = append(possibiliMattonciniPerPosizione, possibiliMattoncini)
+	}
 
+	// 2.3 creo le file possibili
+	var possibiliFile [][]NomeMattoncino
+	for _, possibiliMattoncini := range possibiliMattonciniPerPosizione {
+		if len(possibiliFile) == 0 {
+			// 2.3.1 se abbiamo tutte le liste vuote allora ogni possibile mattoncino è valido
 			for _, mattoncino := range possibiliMattoncini {
-				// 2.2.4 rimuovo liste non possibili perché contenenti elementi duplicati
-				valid := true
-				var possibileFila []NomeMattoncino
-				for _, m := range mattonciniListaBordi {
-					if m == mattoncino {
-						valid = false
-						break
+				possibiliFile = append(possibiliFile, []NomeMattoncino{mattoncino})
+			}
+		} else {
+			// 2.3.2 aggiungo solo le liste possibili
+
+			// 2.3.2.1 segno i mattoncini usati da ogni fila
+			mattonciniUsatiPossibiliFile := make([]SetMattoncini, len(possibiliFile))
+			for i, possibileFila := range possibiliFile {
+				mattonciniUsatiPossibiliFile[i] = make(SetMattoncini)
+				for _, mattoncino := range possibileFila {
+					mattonciniUsatiPossibiliFile[i][mattoncino] = true
+				}
+			}
+
+			// 2.3.2.2 creo le nuove possibili file aggiungendo i possibili mattoncini validi
+			var nuovePossibiliFile [][]NomeMattoncino
+			for _, mattoncino := range possibiliMattoncini {
+				for i, possibileFila := range possibiliFile {
+					if !mattonciniUsatiPossibiliFile[i][mattoncino] {
+						nuovePossibiliFile = append(nuovePossibiliFile, append(possibileFila, mattoncino))
 					}
-					possibileFila = append(possibileFila, m)
-				}
-
-				// 2.2.5 se possibile aggiungo alle possibili liste
-				if valid {
-					possibileFila = append(possibileFila, mattoncino)
-					possibiliFile = append(possibiliFile, possibileFila)
 				}
 			}
 
-			// 2.2.6 controllo se ho trovato almeno una lista possibile
-			if len(possibiliFile) == 0 {
+			// 2.3.2.3 controllo le nuove possibili file
+			if len(nuovePossibiliFile) == 0 {
 				fmt.Println("indefinito")
 				return
 			}
 
-			newPossibili = append(newPossibili, possibiliFile...)
+			possibiliFile = nuovePossibiliFile
 		}
+	}
 
-		possibiliMattonciniListaBordi = newPossibili
+	// controllo liste ottenute
+	if len(possibiliFile) == 0 {
+		fmt.Println("indefinito")
+		return
 	}
 
 	// 3. definisco la funzione ausiliaria al calcolo
@@ -547,7 +555,7 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 	// 4. calcolo il costo
 	costoMinimo := INFINITO
-	for _, mattonciniListaBordi := range possibiliMattonciniListaBordi {
+	for _, mattonciniListaBordi := range possibiliFile {
 		max := sottoArrayMassimo(mattonciniFila, mattonciniListaBordi)
 		costo := (len(mattonciniFila) - max) + (len(mattonciniListaBordi) - max)
 		if costo < costoMinimo {
