@@ -1,0 +1,783 @@
+// OPZIONE 1
+func opzione1() {
+	type nome string
+	type bordi struct {
+		sinistra string // α
+		destra   string // β
+	}
+
+	type direzione string
+	const (
+		Plus  direzione = "+"
+		Minus direzione = "-"
+	)
+
+	type elementoFila struct {
+		nome      nome
+		direzione direzione
+	}
+
+	type fila = []elementoFila
+
+	type gioco struct {
+		mattoncini map[nome]bordi
+		scatola    map[nome]bool // true: nella scatola, false: non nella scatola (in una fila)
+		file       map[fila]bool
+	}
+
+	// TEMPO: 0(1)
+	// SPAZIO: 0(1)
+	func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
+		gioco.mattoncini[sigma] = bordi{sinistra: alpha, destra: beta}
+		gioco.scatola[sigma] = true
+	}
+
+	// TEMPO: 0(1)
+	// SPAZIO: 0(1)
+	func stampaMattoncino(g gioco, sigma string) {
+		print(gioco.mattoncini[sigma])
+	}
+
+	// TEMPO: O(k)
+	// SPAZIO: O(k)
+	func disponiFila(g gioco, listaNomi string) { // listaNomi = k nomi
+		// TEMPO: O(k)
+		for nome := listaNomi.split(+-) // k volte
+			if !gioco.scatola[nome] return // TEMPO: O(1)
+
+		// TEMPO: O(k)
+		for nome, dir, nomeNext, dirNext := listaNomi.split(+-) // k-1 volte
+			if mattoncini[nome][dirNome] != mattoncini[nomeNext][dirNext] return // TEMPO: O(1)
+
+		// TEMPO: O(k)
+		// SPAZIO: O(k)
+		fila := make([]fila, k) // SPAZIO: k
+		for nome, dir := listaNomi.split(+-) // k volte
+			gioco.scatola[nome] = false // TEMPO: O(1)
+			fila = append(fila, elementoFila{nome: nome, direzione: dir}) // TEMPO: O(1), SPAZIO: O(1)
+
+		// TEMPO: O(1)
+		gioco.file[fila] = true
+	}
+
+	// TEMPO: O(f) (f = #mattoncini nelle file), O(n) worst case
+	// SPAZIO: O(1)
+	func stampaFila(g gioco, sigma string) { // gioco = m file di lunghezza k (mk <= n)
+		// TEMPO: O(1)
+		if gioco.scatola[sigma] == true return
+
+		var filaDaStampare fila;
+
+		// TEMPO: O(mk) <= O(n)
+		// SPAZIO: O(k) (riducibile a O(1) se invece che assegnamento stampiamo direttamente con chiamata ad altra func)
+		for fila := gioco.file // m volte
+			for mattoncino := fila // k volte
+				if mattoncino == sigma // TEMPO: O(1)
+					filaDaStampare = fila // TEMPO: O(1), SPAZIO: O(k)
+					break
+		
+		// TEMPO: O(k)
+		for mattoncino := filaDaStampare // k volte
+			print(gioco.mattoncini[mattoncino]) // TEMPO: O(1)
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func eliminaFila(g gioco, sigma string) {
+
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func disponiFilaMinima(g gioco, alpha, beta string) {
+
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func sottostringaMassima(g gioco, sigma, tao fila) {
+
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func indiceCacofonia(g gioco, sigma string) {
+
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func costo(g gioco, sigma fila, listaNomi string) {
+
+	}
+}
+
+// OPZIONE 2
+func opzione2() {
+	type nome string
+	type bordi struct {
+		sinistra string // α
+		destra   string // β
+	}
+
+	type direzione string
+	const (
+		Plus  direzione = "+"
+		Minus direzione = "-"
+	)
+
+	type elementoFila struct {
+		nome      nome
+		direzione direzione
+	}
+
+	type fila = []elementoFila // slice di lunghezza k
+
+	type indiceFila int
+	type gioco struct {
+		mattoncini map[nome]bordi
+		scatola    map[nome]indiceFila // -1: nella scatola, [o, +∞]: nella fila #i
+		file       []fila // slice di lunghezza m
+	}
+
+	// TEMPO: 0(1)
+	// SPAZIO: 0(1)
+	func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
+		gioco.mattoncini[sigma] = bordi{sinistra: alpha, destra: beta}
+		gioco.scatola[sigma] = -1
+	}
+
+	// TEMPO: 0(1)
+	// SPAZIO: 0(1)
+	func stampaMattoncino(g gioco, sigma string) {
+		print(gioco.mattoncini[sigma])
+	}
+
+	// TEMPO: O(k) ammortizzato, worst case O(k+m) <= O(n)
+	// SPAZIO: O(k) ammortizzato, worst case O(k+m) <= O(n)
+	func disponiFila(g gioco, listaNomi string) { // listaNomi = k nomi (k <= n)
+		// TEMPO: O(k) <= O(n)
+		for nome := listaNomi.split(+-) // k volte
+			if !gioco.scatola[nome] || gioco.scatola[nome] != -1 return // TEMPO: O(1)
+
+		// TEMPO: O(k) <= O(n)
+		for nome, dir, nomeNext, dirNext := listaNomi.split(+-) // k-1 volte
+			if mattoncini[nome][dirNome] != mattoncini[nomeNext][dirNext] return // TEMPO: O(1)
+
+		// TEMPO: O(1) ammortizzato, worst case O(m) <= O(n)
+		// SPAZIO: O(k) ammortizzato, worst case O(m) <= O(n)
+		gioco.file = append(gioco.file, make([]fila, k))
+		
+		// TEMPO: O(k) <= O(n)
+		// SPAZIO: O(k) <= O(n)
+		indiceFila := len(gioco.file) - 1 // TEMPO: O(1), SPAZIO: O(1)
+		for nome, dir := listaNomi.split(+-) // k volte
+			gioco.file[indiceFila] = append(gioco.file[indiceFila], elementoFila{nome: nome, direzione: dir}) // TEMPO: O(1), SPAZIO: O(1)
+			gioco.scatola[nome] = indiceFila // TEMPO: O(1)
+	}
+
+	// TEMPO: O(k) <= O(n)
+	// SPAZIO: O(1)
+	func stampaFila(g gioco, sigma string) { // m file di lunghezza media k (mk <= n)
+		// TEMPO: O(1)
+		filaDaStampare := gioco.scatola[sigma] // TEMPO: O(1)
+		if filaDaStampare == -1 return // TEMPO: O(1)
+		
+		// TEMPO: O(k) <= O(n)
+		for mattoncino := fioco.file[filaDaStampare] // k volte
+			print(gioco.mattoncini[mattoncino]) // TEMPO: O(1)
+	}
+
+	// TEMPO: O(k+m-i), worst case O(k+m) <= O(n)
+	// SPAZIO: O(1), dopo garbage collection O(-k)
+	func eliminaFila(g gioco, sigma string) { // m file (m <= n), fila = i-esima fila di file (i <= m <= n), fila = k mattoncini (k <= n)
+		// TEMPO: O(1)
+		filaDaEliminare := gioco.scatola[sigma] // TEMPO: O(1)
+		if filaDaEliminare == -1 return // TEMPO: O(1)
+
+		// TEMPO: O(k) <= O(n)
+		for mattoncino := filaDaEliminare // k volte
+			gioco.scatola[mattoncino] = -1  // TEMPO: O(1)
+
+		// TEMPO: O(m-i), worst case O(m) <= O(n)
+		// SPAZIO: O(1)
+		gioco.file = append(gioco.file[:filaDaEliminare], gioco.file[filaDaEliminare+1:])
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func disponiFilaMinima(g gioco, alpha, beta string) {
+		// dijkstra
+		// mappa {[bordo]: nome}
+	}
+
+	// TEMPO: 
+	// SPAZIO: 
+	func sottostringaMassima(sigma, tao string) (max string) { // sigma = lunghezza s, tao = lunghezza t
+		return
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func indiceCacofonia(g gioco, sigma string) {
+
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func costo(g gioco, sigma fila, listaNomi string) {
+
+	}
+}
+
+// OPZIONE 3
+func opzione3() {
+	type nomeMattoncino string
+	type bordo string
+	type bordi struct {
+		sinistra bordo // α
+		destra   bordo // β
+	}
+
+	type direzione string
+	const (
+		Plus  direzione = "+"
+		Minus direzione = "-"
+	)
+
+	type elementoFila struct {
+		nome      nomeMattoncino
+		direzione direzione
+	}
+
+	type nomeFila string // "first.dir first.nome ... last.dir last.nome"
+	type fila = []elementoFila // k mattoncini
+
+	type gioco struct {
+		mattoncini map[nomeMattoncino]bordi // n  mattoncini
+		scatola    map[nomeMattoncino]nomeFila // l mattoncini, "": nella scatola, x != "": nella fila x
+		file       map[nomeFila]fila // m file
+	}
+
+	// TEMPO: 0(1)
+	// SPAZIO: 0(1)
+	func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
+		gioco.mattoncini[sigma] = bordi{sinistra: alpha, destra: beta}
+		gioco.scatola[sigma] = ""
+	}
+
+	// TEMPO: 0(1)
+	// SPAZIO: 0(1)
+	func stampaMattoncino(g gioco, sigma string) {
+		print(gioco.mattoncini[sigma])
+	}
+
+	// TEMPO: O(k) <= O(n)
+	// SPAZIO: O(k) <= O(n)
+	func disponiFila(g gioco, listaNomi string) { // listaNomi = k nomi (k <= n)
+		// TEMPO: O(k) <= O(n)
+		for nome := listaNomi.split(+-) // k volte
+			if !gioco.scatola[nome] || gioco.scatola[nome] != "" return // TEMPO: O(1)
+
+		// TEMPO: O(k) <= O(n)
+		for nome, dir, nomeNext, dirNext := listaNomi.split(+-) // k-1 volte
+			if mattoncini[nome][dirNome] != mattoncini[nomeNext][dirNext] return // TEMPO: O(1)
+
+		// TEMPO: O(1)
+		// SPAZIO: O(k) <= O(n)
+		fila := make([]fila, k)
+		gioco.file[nomeFila] = make([]elementoF)
+		
+		// TEMPO: O(k) <= O(n)
+		// SPAZIO: O(k) <= O(n)
+		for nome, dir := listaNomi.split(+-) // k volte
+			gioco.file[nomeFila] = append(gioco.file[nomeFila], elementoFila{nome: nome, direzione: dir}) // TEMPO: O(1), SPAZIO: O(1)
+			gioco.scatola[nome] = nomeFila // TEMPO: O(1)
+	}
+
+	// TEMPO: O(k) <= O(n)
+	// SPAZIO: O(1)
+	func stampaFila(g gioco, sigma string) { // m file di lunghezza media k (mk <= n)
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		filaDaStampare := gioco.scatola[sigma] // TEMPO: O(1), SPAZIO: O(1)
+		if filaDaStampare == "" return // TEMPO: O(1)
+		
+		// TEMPO: O(k) <= O(n)
+		for mattoncino := gioco.file[filaDaStampare] // k volte
+			print(gioco.mattoncini[mattoncino]) // TEMPO: O(1)
+	}
+
+	// TEMPO: O(k) <= O(n)
+	// SPAZIO: O(1), dopo garbage collection O(-k)
+	func eliminaFila(g gioco, sigma string) { // m file (m <= n), fila = i-esima fila di file (i <= m <= n), fila = k mattoncini (k <= n)
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		filaDaEliminare := gioco.scatola[sigma] // TEMPO: O(1), SPAZIO: O(1)
+		if filaDaEliminare == "" return // TEMPO: O(1)
+
+		// TEMPO: O(k) <= O(n)
+		for mattoncino := filaDaEliminare // k volte
+			gioco.scatola[mattoncino] = ""  // TEMPO: O(1)
+
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		gioco.file[filaDaEliminare] = nil
+	}
+
+	// TEMPO: O(l^2 + k) = O(l^2)
+	// SPAZIO: O(2l) = O(l)
+	func disponiFilaMinima(g gioco, alpha, beta string) { // l mattoncini nella scatola, fila minima lunghezza k
+		// ? dijkstra
+		// * creo mappa mattoncini per accessibilità
+		
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		archi := make(map[bordo]nomeMattoncino[])
+		
+		// TEMPO: O(l) <= O(n)
+		// SPAZIO: O(2l) = O(l) <= O(n)
+		for nomeMattoncino, _ := range gioco.scatola { // l volte
+			if fila != "" { // TEMPO: O(1), SPAZIO: O(1)
+				continue // ignoro mattoncini che sono già nelle file, migliorabile rimuovendo mattoncini delle file dalla scatola
+			}
+			sinistra := gioco.mattoncini[nomeMattoncino].sinistra // TEMPO: O(1), SPAZIO: O(1)
+			destra := gioco.mattoncini[nomeMattoncino].destra // TEMPO: O(1), SPAZIO: O(1)
+
+			if  _, ok := archi[sinistra]; !ok { // TEMPO: O(1), SPAZIO: O(1)
+				archi[sinistra] = make(nomeMattoncino[]) // TEMPO: O(1), SPAZIO: O(1)
+			}
+
+			if  _, ok := archi[destra]; !ok { // TEMPO: O(1), SPAZIO: O(1)
+				archi[destra] = make(nomeMattoncino[]) // TEMPO: O(1), SPAZIO: O(1)
+			}
+
+			archi[sinistra] = append(archi[sinistra], nomeMattoncino) // TEMPO: O(1), SPAZIO: O(1)
+			archi[destra] = append(archi[destra], nomeMattoncino) // TEMPO: O(1), SPAZIO: O(1)
+		}
+
+		// * inizializzo mappe
+
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		distanze := make(map[nomeMattoncino]int)
+		predecessori := make(map[nomeMattoncino]nomeMattoncino)
+		daVisitare := make(map[nomeMattoncino]bool) // migliorabile con coda con priorità o min heap
+
+		// TEMPO: O(l) <= O(n)
+		// SPAZIO: O(l) <= O(n)
+		for nomeMattoncino, _ := range gioco.scatola { // l volte
+			distanze[nomeMattoncino] = math.MaxInt64 // TEMPO: O(1), SPAZIO: O(1)
+			daVisitare[nomeMattoncino] = true // TEMPO: O(1), SPAZIO: O(1)
+		}
+
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		distanze[alpha] = 0
+
+		// * trovo il percorso
+
+		// TEMPO: 
+		// SPAZIO: 
+		for len(daVisitare) > 0 { // l volte
+			// * trovo nodo con distanza minima
+			
+			// TEMPO: O(1)
+			// SPAZIO: O(1)
+			minimo := alpha
+			distanzaMinima := math.MaxInt64
+
+			// TEMPO: O(len(daVisitare)) <= O(l)
+			// SPAZIO: O(1)
+			for nomeMattoncino := range daVisitare { // len(daVisitare) volte
+				if distanze[nomeMattoncino] < distanzaMinima { // TEMPO: O(1), SPAZIO: O(1)
+					distanzaMinima = distanze[nomeMattoncino] // TEMPO: O(1), SPAZIO: O(1)
+					minimo = nomeMattoncino // TEMPO: O(1), SPAZIO: O(1)
+				}
+			}
+
+			// TEMPO: O(1)
+			// SPAZIO: O(1)
+			delete(daVisitare, minimo) 
+
+			// TEMPO: O(1)
+			// SPAZIO: O(1)
+			if distanze[minimo] == math.MaxInt64 { 
+				break	// tutti i nodi rimanenti sono irraggiungibili
+			}
+
+			// TEMPO: O(1)
+			// SPAZIO: O(1)
+			if minimo == beta { 
+				break	// siamo arrivati al mattoncino desiderato
+			}
+
+
+			// * aggiorno distanze
+
+			// TEMPO: 
+			// SPAZIO: 
+			for _, vicino := range archi[minimo.sinistra] { 
+				if distanze[vicino] > distanze[minimo] + 1 { // TEMPO: O(1), SPAZIO: O(1)
+					distanze[vicino] = distanze[minimo] + 1 // TEMPO: O(1), SPAZIO: O(1)
+					predecessori[vicino] = minimo // TEMPO: O(1), SPAZIO: O(1)
+				}
+			}
+
+			// TEMPO: 
+			// SPAZIO: 
+			for _, vicino := range archi[minimo.destra] {
+				if distanze[vicino] > distanze[minimo] + 1 { // TEMPO: O(1), SPAZIO: O(1)
+					distanze[vicino] = distanze[minimo] + 1 // TEMPO: O(1), SPAZIO: O(1)
+					predecessori[vicino] = minimo // TEMPO: O(1), SPAZIO: O(1)
+				}
+			}
+		}
+
+		// * stampo il percorso
+		
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		mattoncino := beta 
+
+		// TEMPO: O(k)
+		// SPAZIO: O(1)
+		for mattoncino != nil { // k volte
+			print(mattoncino) // TEMPO: O(1), SPAZIO: O(1)
+			mattoncino = predecessori[mattoncino] // TEMPO: O(1), SPAZIO: O(1)
+		}
+	}
+
+	// TEMPO: O(mn)
+	// SPAZIO: O(min(m,n))
+	func sottostringaMassima(sigma, tao string) string { // sigma = lunghezza s, tao = lunghezza t
+		m := len(sigma) // TEMPO: O(1), SPAZIO: O(1)
+		n := len(tao) // TEMPO: O(1), SPAZIO: O(1)
+		
+		// TEMPO: O(1)
+		if m == 0 || n == 0 {  // TEMPO: O(1)
+			return "" // SPAZIO: O(1)
+		}
+
+		// TEMPO: O(1), SPAZIO: O(1)
+		if m < n { // TEMPO: O(1)
+			sigma, tao = tao, sigma // TEMPO: O(1), SPAZIO: O(1)
+			m, n = n, m // TEMPO: O(1), SPAZIO: O(1)
+		}
+
+		// TEMPO: O(1), SPAZIO: O(n)
+		current := make([]string, n+1) // TEMPO: O(1), SPAZIO: O(n)
+		previous := make([]string, n+1) // TEMPO: O(1), SPAZIO: O(n)
+
+		// TEMPO: O(mn), SPAZIO: O(1)
+		for i := 1; i <= m; i++ { // m volte
+			current, previous = previous, current // TEMPO: O(1), SPAZIO: O(1)
+
+			for j := 1; j <= n; j++ { // n volte
+				if sigma[i-1] == tao[j-1] { // TEMPO: O(1)
+					current[j] = previous[j-1] + string(sigma[i-1]) // TEMPO: O(1), SPAZIO: O(1)
+				} else {
+					if len(current[j-1]) > len(previous[j]) { // TEMPO: O(1)
+						current[j] = current[j-1] // TEMPO: O(1), SPAZIO: O(1)
+					} else {
+						current[j] = previous[j] // TEMPO: O(1), SPAZIO: O(1)
+					}
+				}
+			}
+		}
+
+		// TEMPO: O(1)
+		return current[n]
+	}
+
+	// TEMPO: O(summation pq for k 0 to k-1) <= O(maxLen(mattoncino)secondMaxLen(mattoncino)k) = O(maxLen(mattoncino)k) = O(k) se le stringhe sono di lunghezza contenuta
+	// SPAZIO: O(summation min(p, q) for k 0 to k-1) <= O(secondMaxLen(mattoncino)k) = O(k) se le stringhe sono di lunghezza contenuta, dopo garbage collection O(1)
+	func indiceCacofonia(g gioco, sigma string) { // fila = k mattoncini (k <= n)
+		// TEMPO: O(1)
+		// SPAZIO: O(1)
+		filaDaCalcolare := gioco.scatola[sigma] // TEMPO: O(1), SPAZIO: O(1)
+		if filaDaCalcolare == "" return // TEMPO: O(1)
+		
+		// TEMPO: O(kpq) <= O(npq)
+		// SPAZIO: O(min(p,q)k), dopo garbage collection O(1)
+		sum := 0 // SPAZIO: O(1)
+		for mattoncino, next := gioco.file[filaDaStampare] // k-1 volte, len(mattoncino) = p, len(next) = q
+			sum += len(sottostringaMassima(mattoncino, next)) // TEMPO: O(pq), SPAZIO: O(min(p,q))
+		
+		// TEMPO: O(1), SPAZIO: O(1)
+		print(sum)
+	}
+
+	// TEMPO:
+	// SPAZIO:
+	func costo(g gioco, sigma fila, listaNomi string) {
+
+	}
+}
+
+func opzioniSottostringaMassima() {
+	// *****************************
+	// sottostringaMassima() 1: 
+	// // TEMPO: O(2^s + 2^t)
+	// // SPAZIO: O(2^s + 2^t)
+	// func sottostringaMassima(sigma, tao string) (max string) { // sigma = lunghezza s, tao = lunghezza t
+	// 	s := len(sigma) //TEMPO: O(1), SPAZIO: O(1)
+	// 	t := len(tao) 	//TEMPO: O(1), SPAZIO: O(1)
+	// 	sottostringheSigma := make(map[string]bool)
+	// 	sottostringheTao := make(map[string]bool)
+
+	// 	// TEMPO: O(2^s)
+	// 	// SPAZIO: O(2^s)
+	// 	for _, lettera := range sigma { // s volte
+	// 		toAdd := make(map[string]bool) // SPAZIO: O(1)
+
+	// 		// TEMPO: O(2^(s-i))
+	// 		// SPAZIO: O(2^(s-i))
+	// 		for comb, _ := range sottostringheSigma { // 2^(s-i) volte
+	// 			toAdd[string(comb)+string(lettera)] = true  // SPAZIO: O(1)
+	// 		}
+
+	// 		// TEMPO: O(2^(s-i))
+	// 		// SPAZIO: O(2^(s-i))
+	// 		for comb, _ := range toAdd { // 2^(s-i) volte
+	// 			sottostringheSigma[comb] = true // SPAZIO: O(1)
+	// 		}
+
+	// 		sottostringheSigma[string(lettera)] = true // SPAZIO: O(1)
+	// 	}
+
+	// 	// TEMPO: O(2^t)
+	// 	// SPAZIO: O(2^t)
+	// 	for _, lettera := range tao { // t volte
+	// 		toAdd := make(map[string]bool) // SPAZIO: O(1)
+
+	// 		// TEMPO: O(2^(t-i))
+	// 		// SPAZIO: O(2^(s-i))
+	// 		for comb, _ := range sottostringheTao { // 2^(t-i) volte
+	// 			toAdd[string(comb)+string(lettera)] = true // SPAZIO: O(1)
+	// 		}
+
+	// 		// TEMPO: O(2^(t-i))
+	// 		// SPAZIO: O(2^(t-i))
+	// 		for comb, _ := range toAdd { // 2^(t-i) volte
+	// 			sottostringheTao[comb] = true // SPAZIO: O(1)
+	// 		}
+
+	// 		sottostringheTao[string(lettera)] = true // SPAZIO: O(1)
+	// 	}
+
+	// 	// TEMPO: O(2^s)
+	// 	// SPAZIO: O(1)
+	// 	for combX, _ := range sottostringheSigma { // 2^s volte
+	// 		if len(combX) > len(max) && sottostringheTao[combX] == true { // TEMPO: O(1)
+	// 			max = combX // SPAZIO: O(1)
+	// 		}
+	// 	}
+
+	// 	return
+	// }
+
+	// *****************************
+	// sottostringaMassima() 2:
+	// // TEMPO: O(mn)
+	// // SPAZIO: O(mn)
+	// func sottostringaMassima(sigma, tao string) string { // sigma = lunghezza s, tao = lunghezza t
+	// 	m := len(sigma) // TEMPO: O(1), SPAZIO: O(1)
+	// 	n := len(tao) // TEMPO: O(1), SPAZIO: O(1)
+
+	// 	// TEMPO: O(m), SPAZIO: O(mn)
+	// 	dp := make([][]string, m+1) // TEMPO: O(1), SPAZIO: O(m)
+	// 	for i := range dp { // m+1 volte
+	// 		dp[i] = make([]string, n+1) // TEMPO: O(1), SPAZIO: O(n)
+	// 	}
+
+	// 	// TEMPO: O(mn), SPAZIO: O(1)
+	// 	for i := 1; i <= m; i++ { // m volte
+	// 		for j := 1; j <= n; j++ { // n volte
+	// 			if sigma[i-1] == tao[j-1] { // TEMPO: O(1)
+	// 				dp[i][j] = dp[i-1][j-1] + string(sigma[i-1]) // TEMPO: O(1), SPAZIO: O(1)
+	// 			} else {
+	// 				if len(dp[i-1][j]) > len(dp[i][j-1]) { // TEMPO: O(1)
+	// 					dp[i][j] = dp[i-1][j] // TEMPO: O(1), SPAZIO: O(1)
+	// 				} else {
+	// 					dp[i][j] = dp[i][j-1] // TEMPO: O(1), SPAZIO: O(1)
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+		
+	// 	// TEMPO: O(1)
+	// 	return dp[m][n]
+	// }
+
+	// *****************************
+	// sottostringaMassima() 3:
+	// // TEMPO: O(mn)
+	// // SPAZIO: O(min(m,n))
+	// func sottostringaMassima(sigma, tao string) string { // sigma = lunghezza s, tao = lunghezza t
+	// 	m := len(sigma) // TEMPO: O(1), SPAZIO: O(1)
+	// 	n := len(tao) // TEMPO: O(1), SPAZIO: O(1)
+
+	// 	// TEMPO: O(1)
+	// 	if m == 0 || n == 0 {  // TEMPO: O(1)
+	// 		return "" // SPAZIO: O(1)
+	// 	}
+
+	// 	// TEMPO: O(1), SPAZIO: O(1)
+	// 	if m < n { // TEMPO: O(1)
+	// 		sigma, tao = tao, sigma // TEMPO: O(1), SPAZIO: O(1)
+	// 		m, n = n, m // TEMPO: O(1), SPAZIO: O(1)
+	// 	}
+
+	// 	// TEMPO: O(1), SPAZIO: O(n)
+	// 	current := make([]string, n+1) // TEMPO: O(1), SPAZIO: O(n)
+	// 	previous := make([]string, n+1) // TEMPO: O(1), SPAZIO: O(n)
+
+	// 	// TEMPO: O(mn), SPAZIO: O(1)
+	// 	for i := 1; i <= m; i++ { // m volte
+	// 		current, previous = previous, current // TEMPO: O(1), SPAZIO: O(1)
+
+	// 		for j := 1; j <= n; j++ { // n volte
+	// 			if sigma[i-1] == tao[j-1] { // TEMPO: O(1)
+		// 				current[j] = previous[j-1] + string(sigma[i-1]) // TEMPO: O(1), SPAZIO: O(1)
+	// 			} else {
+	// 				if len(current[j-1]) > len(previous[j]) { // TEMPO: O(1)
+		// 					current[j] = current[j-1] // TEMPO: O(1), SPAZIO: O(1)
+	// 				} else {
+	// 					current[j] = previous[j] // TEMPO: O(1), SPAZIO: O(1)
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+
+	// 	// TEMPO: O(1)
+	// 	return current[n]
+	// }
+}
+
+func opzioniDisponiFilaMinima() {
+	// *****************************
+	// disponiFilaMinima() 1: 
+	// // TEMPO: O(l^2 + k) = O(l^2)
+	// // SPAZIO: O(2l) = O(l)
+	// func disponiFilaMinima(g gioco, alpha, beta string) { // l mattoncini nella scatola, fila minima lunghezza k
+	// 	// ? dijkstra
+	// 	// * creo mappa mattoncini per accessibilità
+		
+	// 	// TEMPO: O(1)
+	// 	// SPAZIO: O(1)
+	// 	archi := make(map[bordo]nomeMattoncino[])
+		
+	// 	// TEMPO: O(l) <= O(n)
+	// 	// SPAZIO: O(2l) = O(l) <= O(n)
+	// 	for nomeMattoncino, _ := range gioco.scatola { // l volte
+	// 		sinistra := gioco.mattoncini[nomeMattoncino].sinistra // TEMPO: O(1), SPAZIO: O(1)
+	// 		destra := gioco.mattoncini[nomeMattoncino].destra // TEMPO: O(1), SPAZIO: O(1)
+
+	// 		if  _, ok := archi[sinistra]; !ok { // TEMPO: O(1), SPAZIO: O(1)
+	// 			archi[sinistra] = make(nomeMattoncino[]) // TEMPO: O(1), SPAZIO: O(1)
+	// 		}
+
+	// 		if  _, ok := archi[destra]; !ok { // TEMPO: O(1), SPAZIO: O(1)
+	// 			archi[destra] = make(nomeMattoncino[]) // TEMPO: O(1), SPAZIO: O(1)
+	// 		}
+
+	// 		archi[sinistra] = append(archi[sinistra], nomeMattoncino) // TEMPO: O(1), SPAZIO: O(1)
+	// 		archi[destra] = append(archi[destra], nomeMattoncino) // TEMPO: O(1), SPAZIO: O(1)
+	// 	}
+
+	// 	// * inizializzo mappe
+
+	// 	// TEMPO: O(1)
+	// 	// SPAZIO: O(1)
+	// 	distanze := make(map[nomeMattoncino]int)
+	// 	predecessori := make(map[nomeMattoncino]nomeMattoncino)
+	// 	daVisitare := make(map[nomeMattoncino]bool) // migliorabile con coda con priorità o min heap
+
+	// 	// TEMPO: O(l) <= O(n)
+	// 	// SPAZIO: O(l) <= O(n)
+	// 	for nomeMattoncino, _ := range gioco.scatola { // l volte
+	// 		distanze[nomeMattoncino] = math.MaxInt64 // TEMPO: O(1), SPAZIO: O(1)
+	// 		daVisitare[nomeMattoncino] = true // TEMPO: O(1), SPAZIO: O(1)
+	// 	}
+
+	// 	// TEMPO: O(1)
+	// 	// SPAZIO: O(1)
+	// 	distanze[alpha] = 0
+
+	// 	// * trovo il percorso
+
+	//	// TEMPO: O(l^2)
+	// 	// SPAZIO: O(1)
+	// 	for len(daVisitare) > 0 { // l volte
+	// 		// * trovo nodo con distanza minima
+			
+	// 		// TEMPO: O(1)
+	// 		// SPAZIO: O(1)
+	// 		minimo := alpha
+	// 		distanzaMinima := math.MaxInt64
+
+	// 		// TEMPO: O(len(daVisitare)) <= O(l)
+	// 		// SPAZIO: O(1)
+	// 		for nomeMattoncino := range daVisitare { // len(daVisitare) volte
+	// 			if distanze[nomeMattoncino] < distanzaMinima { // TEMPO: O(1), SPAZIO: O(1)
+	// 				distanzaMinima = distanze[nomeMattoncino] // TEMPO: O(1), SPAZIO: O(1)
+	// 				minimo = nomeMattoncino // TEMPO: O(1), SPAZIO: O(1)
+	// 			}
+	// 		}
+
+	// 		// TEMPO: O(1)
+	// 		// SPAZIO: O(1)
+	// 		delete(daVisitare, minimo) 
+
+	// 		// TEMPO: O(1)
+	// 		// SPAZIO: O(1)
+	// 		if distanze[minimo] == math.MaxInt64 { 
+	// 			break	// tutti i nodi rimanenti sono irraggiungibili
+	// 		}
+
+	// 		// TEMPO: O(1)
+	// 		// SPAZIO: O(1)
+	// 		if minimo == beta { 
+	// 			break	// siamo arrivati al mattoncino desiderato
+	// 		}
+
+
+	// 		// * aggiorno distanze
+
+	// 		// TEMPO: 
+	// 		// SPAZIO: 
+	// 		for _, vicino := range archi[minimo.sinistra] { 
+	// 			if distanze[vicino] > distanze[minimo] + 1 { // TEMPO: O(1), SPAZIO: O(1)
+	// 				distanze[vicino] = distanze[minimo] + 1 // TEMPO: O(1), SPAZIO: O(1)
+	// 				predecessori[vicino] = minimo // TEMPO: O(1), SPAZIO: O(1)
+	// 			}
+	// 		}
+
+	// 		// TEMPO: 
+	// 		// SPAZIO: 
+	// 		for _, vicino := range archi[minimo.destra] {
+	// 			if distanze[vicino] > distanze[minimo] + 1 { // TEMPO: O(1), SPAZIO: O(1)
+	// 				distanze[vicino] = distanze[minimo] + 1 // TEMPO: O(1), SPAZIO: O(1)
+	// 				predecessori[vicino] = minimo // TEMPO: O(1), SPAZIO: O(1)
+	// 			}
+	// 		}
+	// 	}
+
+	// 	// * stampo il percorso
+		
+	// 	// TEMPO: O(1)
+	// 	// SPAZIO: O(1)
+	// 	mattoncino := beta 
+
+	// 	// TEMPO: O(k)
+	// 	// SPAZIO: O(1)
+	// 	for mattoncino != nil { // k volte
+	// 		print(mattoncino) // TEMPO: O(1), SPAZIO: O(1)
+	// 		mattoncino = predecessori[mattoncino] // TEMPO: O(1), SPAZIO: O(1)
+	// 	}
+	// }
+
+	// *****************************
+	// disponiFilaMinima() 2: 
+}
