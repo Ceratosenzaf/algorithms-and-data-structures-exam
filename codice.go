@@ -153,7 +153,6 @@ func trascriviScatolaSenzaNomi(g gioco, target map[Bordo]map[Bordo]int) {
 	}
 }
 
-// funzioni del progetto
 func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 	usati := make(SetMattoncini)
 
@@ -187,6 +186,7 @@ func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 	return listaNomi[1:]
 }
 
+// funzioni del progetto
 func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
 	g.mattoncini[sigma] = mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
 	aggiungiMattoncinoAScatola(g, sigma)
