@@ -13,13 +13,13 @@ import (
 type NomeMattoncino = string // σ
 type Bordo string
 
-type Mattoncino struct { // TODO: cambia nome in mattoncino
+type mattoncino struct {
 	sinistra Bordo    // α
 	destra   Bordo    // β
 	fila     NomeFila // x = nella fila x, "" = nella scatola
 }
 
-type Mattoncini map[NomeMattoncino]Mattoncino
+type Mattoncini map[NomeMattoncino]mattoncino
 
 type Direzione string
 
@@ -33,10 +33,10 @@ type MattoncinoOrdinato struct {
 	direzione Direzione
 }
 
-type NomeFila string           // +σ1 -σ2 ... -σn
-type Fila []MattoncinoOrdinato // TODO: cambia nome in fila
+type NomeFila string // +σ1 -σ2 ... -σn
+type fila []MattoncinoOrdinato
 
-type File map[NomeFila]Fila
+type File map[NomeFila]fila
 
 type SetMattoncini map[NomeMattoncino]bool
 type Scatola map[Bordo]map[Bordo]SetMattoncini
@@ -51,7 +51,7 @@ type gioco struct {
 const INFINITO = math.MaxInt64
 
 // funzioni per uso interno
-func bordoDaDirezione(m Mattoncino, dir Direzione, posizioneBordo string) Bordo {
+func bordoDaDirezione(m mattoncino, dir Direzione, posizioneBordo string) Bordo {
 	if dir == Plus {
 		if posizioneBordo == "destra" {
 			return m.destra
@@ -65,11 +65,11 @@ func bordoDaDirezione(m Mattoncino, dir Direzione, posizioneBordo string) Bordo 
 }
 
 func stampaMattoncinoInDirezione(g gioco, sigma string, dir Direzione) {
-	if mattoncino, ok := g.mattoncini[sigma]; ok {
+	if m, ok := g.mattoncini[sigma]; ok {
 		if dir == Plus {
-			fmt.Printf("%s: %s, %s\n", sigma, mattoncino.sinistra, mattoncino.destra)
+			fmt.Printf("%s: %s, %s\n", sigma, m.sinistra, m.destra)
 		} else {
-			fmt.Printf("%s: %s, %s\n", sigma, mattoncino.destra, mattoncino.sinistra)
+			fmt.Printf("%s: %s, %s\n", sigma, m.destra, m.sinistra)
 		}
 	}
 }
@@ -161,34 +161,34 @@ func listaNomiDaListaBordi(g gioco, listaBordi []Bordo) (listaNomi string) {
 		bordo := listaBordi[i]
 		proxBordo := listaBordi[i+1]
 
-		var mattoncino NomeMattoncino
+		var nomeMattoncino NomeMattoncino
 		dir := Plus
 
 		if mattoncini := g.scatola[bordo][proxBordo]; len(mattoncini) > 0 {
 			for m := range mattoncini {
 				if !usati[m] {
-					mattoncino = m
+					nomeMattoncino = m
 					break
 				}
 			}
-			usati[mattoncino] = true
-			if g.mattoncini[mattoncino].sinistra != bordo {
+			usati[nomeMattoncino] = true
+			if g.mattoncini[nomeMattoncino].sinistra != bordo {
 				dir = Minus
 			}
 		}
 
-		if mattoncino == "" {
+		if nomeMattoncino == "" {
 			return ""
 		}
 
-		listaNomi += " " + string(dir) + mattoncino
+		listaNomi += " " + string(dir) + nomeMattoncino
 	}
 
 	return listaNomi[1:]
 }
 
 func inserisciMattoncino(g gioco, alpha, beta, sigma string) {
-	g.mattoncini[sigma] = Mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
+	g.mattoncini[sigma] = mattoncino{sinistra: Bordo(alpha), destra: Bordo(beta)}
 	aggiungiMattoncinoAScatola(g, sigma)
 }
 
@@ -223,17 +223,17 @@ func disponiFila(g gioco, listaNomi string) {
 	}
 
 	nomeFila := NomeFila(listaNomi)
-	fila := make(Fila, len(mattonciniOrdinati))
+	nuovaFila := make(fila, len(mattonciniOrdinati))
 	for i, mattoncinoOrdinato := range mattonciniOrdinati {
 		direzione := Direzione(mattoncinoOrdinato[0])
 		nome := mattoncinoOrdinato[1:]
 
-		fila[i] = MattoncinoOrdinato{nome, direzione}
-		g.mattoncini[nome] = Mattoncino{sinistra: g.mattoncini[nome].sinistra, destra: g.mattoncini[nome].destra, fila: nomeFila}
+		nuovaFila[i] = MattoncinoOrdinato{nome, direzione}
+		g.mattoncini[nome] = mattoncino{sinistra: g.mattoncini[nome].sinistra, destra: g.mattoncini[nome].destra, fila: nomeFila}
 		rimuoviMattoncinoDaScatola(g, nome)
 	}
 
-	g.file[nomeFila] = fila
+	g.file[nomeFila] = nuovaFila
 }
 
 func stampaFila(g gioco, sigma string) {
@@ -242,8 +242,8 @@ func stampaFila(g gioco, sigma string) {
 	}
 
 	fmt.Println("(")
-	for _, mattoncino := range g.file[g.mattoncini[sigma].fila] {
-		stampaMattoncinoInDirezione(g, string(mattoncino.nome), mattoncino.direzione)
+	for _, m := range g.file[g.mattoncini[sigma].fila] {
+		stampaMattoncinoInDirezione(g, string(m.nome), m.direzione)
 	}
 	fmt.Println(")")
 }
@@ -255,7 +255,7 @@ func eliminaFila(g gioco, sigma string) {
 
 	filaDaEliminare := g.mattoncini[sigma].fila
 	for _, elementoFila := range g.file[filaDaEliminare] {
-		g.mattoncini[elementoFila.nome] = Mattoncino{
+		g.mattoncini[elementoFila.nome] = mattoncino{
 			sinistra: g.mattoncini[elementoFila.nome].sinistra,
 			destra:   g.mattoncini[elementoFila.nome].destra,
 		}
@@ -418,10 +418,10 @@ func indiceCacofonia(g gioco, sigma string) {
 
 	somma := 0
 	for i := 0; i < len(g.file[filaDaCalcolare])-1; i++ {
-		mattoncino := g.file[filaDaCalcolare][i].nome
-		proxMattoncino := g.file[filaDaCalcolare][i+1].nome
+		m := g.file[filaDaCalcolare][i].nome
+		prox := g.file[filaDaCalcolare][i+1].nome
 
-		somma += len(sottostringaMassima(g, mattoncino, proxMattoncino))
+		somma += len(sottostringaMassima(g, m, prox))
 	}
 
 	fmt.Println(somma)
@@ -435,8 +435,8 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 	// 1. creo lista di adiacenza della fila
 	archiFila := make(Scatola)
-	for _, mattoncino := range g.file[filaDaCalcolare] {
-		aggiungiAListaAdiacenza(g, archiFila, mattoncino.nome)
+	for _, m := range g.file[filaDaCalcolare] {
+		aggiungiAListaAdiacenza(g, archiFila, m.nome)
 	}
 
 	// 2. creo le strutture dati
@@ -444,8 +444,8 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 	var possibiliMattonciniPerPosizione [][]NomeMattoncino
 
 	// 2.1 valorizzo lista mattoncini da fila
-	for _, mattoncino := range g.file[filaDaCalcolare] {
-		mattonciniFila = append(mattonciniFila, mattoncino.nome)
+	for _, m := range g.file[filaDaCalcolare] {
+		mattonciniFila = append(mattonciniFila, m.nome)
 	}
 
 	// 2.2 valorizzo liste mattoncini da lista bordi
@@ -455,11 +455,11 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 
 		// 2.2.1 trovo mattoncini candidati per il posto
 		var possibiliMattoncini []NomeMattoncino
-		for mattoncino := range g.scatola[bordo][proxBordo] {
-			possibiliMattoncini = append(possibiliMattoncini, mattoncino)
+		for m := range g.scatola[bordo][proxBordo] {
+			possibiliMattoncini = append(possibiliMattoncini, m)
 		}
-		for mattoncino := range archiFila[bordo][proxBordo] {
-			possibiliMattoncini = append(possibiliMattoncini, mattoncino)
+		for m := range archiFila[bordo][proxBordo] {
+			possibiliMattoncini = append(possibiliMattoncini, m)
 		}
 
 		// 2.2.2 controllo se ho possibili mattoncini e li setto
@@ -476,8 +476,8 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 	for _, possibiliMattoncini := range possibiliMattonciniPerPosizione {
 		if len(possibiliFile) == 0 {
 			// 2.3.1 se abbiamo tutte le liste vuote allora ogni possibile mattoncino è valido
-			for _, mattoncino := range possibiliMattoncini {
-				possibiliFile = append(possibiliFile, []NomeMattoncino{mattoncino})
+			for _, m := range possibiliMattoncini {
+				possibiliFile = append(possibiliFile, []NomeMattoncino{m})
 			}
 		} else {
 			// 2.3.2 aggiungo solo le liste possibili
@@ -486,17 +486,17 @@ func costo(g gioco, sigma string, listaBordi ...string) {
 			mattonciniUsatiPossibiliFile := make([]SetMattoncini, len(possibiliFile))
 			for i, possibileFila := range possibiliFile {
 				mattonciniUsatiPossibiliFile[i] = make(SetMattoncini)
-				for _, mattoncino := range possibileFila {
-					mattonciniUsatiPossibiliFile[i][mattoncino] = true
+				for _, m := range possibileFila {
+					mattonciniUsatiPossibiliFile[i][m] = true
 				}
 			}
 
 			// 2.3.2.2 creo le nuove possibili file aggiungendo i possibili mattoncini validi
 			var nuovePossibiliFile [][]NomeMattoncino
-			for _, mattoncino := range possibiliMattoncini {
+			for _, m := range possibiliMattoncini {
 				for i, possibileFila := range possibiliFile {
-					if !mattonciniUsatiPossibiliFile[i][mattoncino] {
-						nuovePossibiliFile = append(nuovePossibiliFile, append(possibileFila, mattoncino))
+					if !mattonciniUsatiPossibiliFile[i][m] {
+						nuovePossibiliFile = append(nuovePossibiliFile, append(possibileFila, m))
 					}
 				}
 			}
