@@ -631,7 +631,5 @@ func main() {
 			fmt.Println("invalid code")
 			break
 		}
-
-		fmt.Println("----------")
 	}
 }

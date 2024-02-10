@@ -5,8 +5,5 @@ m sole croce B
 s B
 m croce fiore H
 m cuore croce I
-d +B +H
-S B
-e H
-S H
+s H
 q
