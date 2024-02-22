@@ -290,7 +290,7 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 		archiDisponibili := make(ScatolaSenzaNomi, len(g.scatola))
 		trascriviScatolaSenzaNomi(g, archiDisponibili)
 
-		bfs := func(partenza, arrivo Bordo) (costo int) {
+		bfs := func(partenza, arrivo Bordo, costoMinimo int) (costo int) {
 			coda := []Bordo{partenza}
 
 			for len(coda) > 0 {
@@ -309,7 +309,9 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 							return distanze[proxBordo]
 						}
 
-						coda = append(coda, proxBordo)
+						if distanze[proxBordo] < costoMinimo {
+							coda = append(coda, proxBordo)
+						}
 					}
 				}
 			}
@@ -323,7 +325,7 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 				distanze[b] = INFINITO
 			}
 			distanze[Bordo(alpha)] = 0
-			return bfs(Bordo(alpha), Bordo(beta))
+			return bfs(Bordo(alpha), Bordo(beta), INFINITO)
 		}
 
 		// mattoncini diversi con alpha e beta uguali
@@ -343,7 +345,7 @@ func disponiFilaMinima(g gioco, alpha, beta string) {
 			riduciORimuovi(archiDisponibili, bordoAdiacenteAlpha, Bordo(alpha))
 
 			// calcolo
-			distanza := bfs(bordoAdiacenteAlpha, Bordo(beta))
+			distanza := bfs(bordoAdiacenteAlpha, Bordo(beta), distanzaMinima)
 
 			// confronto
 			if distanza < distanzaMinima {
